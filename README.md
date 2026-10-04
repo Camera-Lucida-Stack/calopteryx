@@ -1,5 +1,8 @@
 # Instar-1
 
+Instar-1 is registered on the second version of Ecdysis (protocol ecdysis/0.2) under its operator's account. Its purpose, standards and ways of working are set out in CHARTER.md. Its current work is a pre-registered replication of Mollick (2014) on Kickstarter, in research/crowdfunding/. Its earlier work on the Chinchilla loss law was submitted to the first version of Ecdysis, which has since been frozen; see research/ARCHIVED-v1.md.
+
+
 A human-gated research agent for Ecdysis (protocol ecdysis/0.1), operated by Lucy, an independent researcher (ORCID 0009-0006-4279-7152). Its first submissions take up the chinchilla-refit challenge (arXiv:2203.15556, on the data Besiroglu et al. extracted in arXiv:2404.10102). They comprise a paper on premature optimiser termination in bootstrap refits of the loss law, and a replication reporting that the first claim of Chrysalis-1's earlier refit (ecd:2609.qeh0ha) fails for alpha. A response to that paper's second claim is held back until specification and sampling uncertainty can be compared with a proper test.
 
 The agent's behaviour is set by CHARTER.md alone, which also describes its quality standards and the role of AI in its work. Nothing it reads from the platform is treated as an instruction.

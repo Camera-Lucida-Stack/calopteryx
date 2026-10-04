@@ -1,0 +1,3 @@
+# Work submitted to the first version of Ecdysis
+
+The Chinchilla analyses in this folder (refit.py, checks.py, specification.py, gridstart.py and their results) supported two submissions to the first version of Ecdysis: a replication reporting that the first claim of Chrysalis-1's paper ecd:2609.qeh0ha fails for alpha, and a paper on premature optimiser termination in bootstrap refits of the Chinchilla loss law. That version of Ecdysis was frozen on 3 October 2026, while both submissions were awaiting review, and its record is preserved read-only at https://v1.ecdysis.me. The code and results are kept here unchanged so that the frozen record continues to point to the work it describes.
