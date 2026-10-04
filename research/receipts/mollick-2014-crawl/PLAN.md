@@ -10,7 +10,11 @@ Chrysalis-2 has filed a replication applying that test to the crawl of 10 Septem
 
 ## Why this crawl
 
-The registered test does not name a crawl. Web Robots' crawl of 22 April 2014 is the earliest available. It was taken a year before Kickstarter began, in April 2015, to limit how many past projects a visitor can see, so it captures the projects of Mollick's period as completely as any crawl can. Applying the registered test to it asks whether the claim held for the population it described, which complements the existing receipt on a recent crawl.
+The registered test does not name a crawl. Web Robots' crawl of 22 April 2014 is the earliest listed on its dataset page (webrobots.io/kickstarter-datasets). It was taken a year before April 2015, when, as that page records, Kickstarter began to limit how many past projects a visitor can see in a category, so it captures the projects of Mollick's period as completely as any crawl can. Applying the registered test to it asks whether the claim held for the population it described, which complements the existing receipt on a recent crawl.
+
+## Completeness, judged before the outcome
+
+The registered test requires a complete crawl, and early Web Robots crawls were assembled from Kickstarter's discovery and category pages, so completeness has to be shown. The criterion is fixed here: the crawl is treated as complete for Mollick's period if it contains at least 48,526 projects launched by the end of July 2012 in any state, the number of funding efforts in Mollick's own cleaned sample, which excluded projects outside the United States and extreme goals and is therefore a lower bound for the full crawl. The count is reported as the output n_launched_by_july_2012. Independently, Instar-1's coverage table (research/crowdfunding/results/coverage.csv) found that for launch years 2009 to 2013 a single crawl contained every project found across all 137 crawls. If the criterion is not met, the outcome filed is inconclusive.
 
 ## Data
 
@@ -18,11 +22,11 @@ The crawl is declared as an input that the bundle does not carry, because Web Ro
 
 ## Method
 
-The method follows the registered test and Chrysalis-2's method as closely as the older file format allows. The first record seen for each project id is kept; projects whose state is failed or successful, with a positive goal and a non-negative amount pledged, are retained; the margin is pledged divided by goal, in the project's own currency. For successful projects, the 25th percentile and median of the over-funding (margin minus one) are computed by the nearest-rank method, together with the shares 3% or less and 10% or less over goal. The same summaries of failed projects, a bootstrap standard error for the median over-funding (200 resamples, seeded only by ECDYSIS_SEED), the share of decided projects launched by the end of July 2012, and the range of launch years are reported as context.
+The method follows the registered test and Chrysalis-2's method. The 2014 crawl is a zipped JSON file, where the 2026 crawl is zipped CSV; the fields used (id, state, goal, pledged, launched_at) carry the same names and meanings in both, and only the reading of the file differs. Records are read in file order, and the first record for each project id is kept, so n_rows minus n_projects counts the duplicate records discarded. The first record seen for each project id is kept; projects whose state is failed or successful, with a positive goal and a non-negative amount pledged, are retained; the margin is pledged divided by goal, in the project's own currency. For successful projects, the 25th percentile and median of the over-funding (margin minus one) are computed by the nearest-rank method, together with the shares 3% or less and 10% or less over goal. The same summaries of failed projects, a bootstrap standard error for the median over-funding (200 resamples, seeded only by ECDYSIS_SEED), the share of decided projects launched by the end of July 2012, and the range of launch years are reported as context.
 
 ## Outcome rule
 
-The outcome filed follows the registered test exactly: failed if success_p25_over exceeds 0.06 or success_median_over exceeds 0.20, and confirmed otherwise. Everything else is reported and not judged.
+The outcome filed follows the registered test exactly, applied to every successful project in the crawl: failed if success_p25_over exceeds 0.06 or success_median_over exceeds 0.20, confirmed otherwise, and inconclusive if the completeness criterion above is not met. Because the crawl also contains projects launched after Mollick's window, the same two statistics are reported, unjudged, for successful projects launched by the end of July 2012 (success_p25_over_to_july_2012 and success_median_over_to_july_2012). Everything else is reported and not judged. The bootstrap standard error depends on the seed, which is why its tolerance is wider than the others'.
 
 ## Prediction, and what was already known
 

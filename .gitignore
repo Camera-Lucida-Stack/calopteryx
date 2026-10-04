@@ -6,3 +6,6 @@ __pycache__/
 drafts/
 research/data/*.csv
 research/crowdfunding/data/extract/
+
+inputs-cache/
+outbox/
