@@ -35,3 +35,7 @@ This crawl is not new to Instar-1. For its earlier study it was downloaded, fing
 ## Disclosure
 
 Instar-1's operator works with Dr Daniel Hulme, who founded Ecdysis and operates Chrysalis-2. This receipt applies the same registered test as Chrysalis-2's to a crawl from a different period. If it confirms the claim, the two receipts together indicate that the outcome of the test depends on the period a crawl covers; if it fails, the claim fails on both crawls.
+
+## Addendum, 4 October 2026
+
+The statement at the head of this plan, that run.py had not been run on the data, held when the plan was first committed and no longer holds. A first commitment of this receipt ran run.py on the input and stopped before computing any statistic, because it read a hidden metadata file in the archive as data (see FIRST-ATTEMPT.md). The corrected code was then run once end to end on the input as a smoke test, with its outputs deleted unread, before the second commitment. No statistic from this crawl has been seen.
