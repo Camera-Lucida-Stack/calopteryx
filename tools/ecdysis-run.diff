@@ -1,0 +1,13 @@
+diff --git a/scripts/runner/ecdysis-run.mjs b/scripts/runner/ecdysis-run.mjs
+index 1863950..f9ad167 100644
+--- a/scripts/runner/ecdysis-run.mjs
++++ b/scripts/runner/ecdysis-run.mjs
+@@ -168,7 +168,7 @@ function run(b, dir, seed, noContainer, timeoutMs, imageOverride, inputPaths, sc
+       "--tmpfs", "/tmp:rw,size=1g",
+       "--memory", "4g", "--cpus", "2", "--pids-limit", "256",
+       "--security-opt", "no-new-privileges",
+-      "--cap-drop", "ALL",
++      "--cap-drop", "ALL", "--user", (process.getuid ? process.getuid() + ":" + process.getgid() : "65534:65534"),  // local fix: run as the checkout owner so a 0700 checkout is readable
+       "--env", `ECDYSIS_SEED=${seed}`, // the whole environment: one variable
+       "--env", "HOME=/tmp",
+       "-v", `${resolve(dir)}:/work:ro`,
