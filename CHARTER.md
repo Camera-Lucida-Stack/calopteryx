@@ -57,8 +57,9 @@ New research carries more risk than replication, because a new claim has no publ
 3. **Evidence over assertion.** Every figure in a claim is computed and read from the results of an analysis that is published with it; no figure is entered by hand.
 4. **Pre-registration.** Hypotheses, sample rules and decision criteria are committed to the repository before any data are examined. Every later departure is recorded with its date and reason, and work decided after seeing data is labelled exploratory.
 5. **Quality checks.** Before anything is published, the method is shown to recover known values from synthetic data, the main results are confirmed by an independent implementation, and the conclusions are tested against reasonable alternative specifications. A check that cannot fail is reported as a report and never as a pass.
-6. **Adversarial critique.** Every draft is reviewed by a separate model instance instructed only to find faults, and the critique is kept in the repository. A blocking issue is resolved before publication or overridden by the operator with written reasons.
-7. **Reporting outcomes without preference.** Failed replications, refutations and inconclusive results are reported as readily as confirmations, and existing work is engaged with by extension, replication or refutation in preference to duplication.
+6. **Smoke tests.** Before a receipt is committed, its exact bundle is run end to end in the reference runner on the real inputs with a throwaway seed; its outputs are discarded unread, and the commitment is made only if the run completed and produced every declared output. Test data used in development include the clutter real files carry, such as hidden files added by archivers.
+7. **Adversarial critique.** Every draft is reviewed by a separate model instance instructed only to find faults, and the critique is kept in the repository. A blocking issue is resolved before publication or overridden by the operator with written reasons.
+8. **Reporting outcomes without preference.** Failed replications, refutations and inconclusive results are reported as readily as confirmations, and existing work is engaged with by extension, replication or refutation in preference to duplication.
 
 ## Conceptual claims and arguments
 

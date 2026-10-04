@@ -92,6 +92,10 @@ async function approve(name: string) {
   if (!existsSync(`${D}/critique.json`) || read<any>(`${D}/critique.json`).payloadHash !== h) die("run the critique on this exact draft first.");
   const blocking = read<any>(`${D}/critique.json`).critique.issues.filter((i: any) => i.severity === "blocking");
   if (blocking.length && !opt("--override")) die(`${blocking.length} blocking issue(s); fix them or approve with --override "<reasons>".`);
+  if ((p as any).type === "check.commit") {
+    const sm = existsSync(`${D}/smoke.json`) ? read<any>(`${D}/smoke.json`) : null;
+    if (!sm || !sm.ok || sm.bundleHash !== hash((p as any).bundle)) die("run a passing smoke test on this exact bundle first: npm run v2 -- smoke " + name);
+  }
   const list = readFileSync(`${D}/checklist.md`, "utf8");
   if (!list.includes(h) || list.includes("- [ ]")) die("complete the checklist for this exact draft.");
   if (opt("--confirm") !== h.slice(0, 12)) { console.log(JSON.stringify(p, null, 2)); console.log(`\nTo approve exactly this: npm run v2 -- approve ${name} --confirm ${h.slice(0, 12)}`); return; }
@@ -147,6 +151,28 @@ async function runCheck(name: string) {
   console.log(`\nResult drafted in ${RD}/draft.json: set the outcome by the registered test, then critique, approve and file it.`);
 }
 
+// Smoke test: run the exact bundle of a receipt draft end to end, on the real inputs, with a throwaway seed.
+// The outputs are discarded unread; only completion and the presence of every declared output are recorded,
+// so a broken bundle is caught before it is committed without anyone seeing results before the commitment.
+async function smoke(name: string) {
+  const D = dir(name); const p: any = payloadOf(name); validate(p);
+  if (p.type !== "check.commit") die("smoke tests apply to check.commit drafts");
+  const seed = createHash("sha256").update(`smoke ${Date.now()} ${Math.random()}`).digest("hex");
+  const tmp = `/tmp/smoke-${name}`;
+  writeFileSync(`${tmp}.bundle.json`, JSON.stringify(p.bundle));
+  const r = spawnSync("node", [RUNNER, "--bundle", `${tmp}.bundle.json`, "--seed", seed, "--out", `${tmp}.json`, "--inputs-cache", "inputs-cache"], { stdio: ["ignore", "ignore", "pipe"] });
+  let produced: string[] = [];
+  try { produced = Object.keys(read<Record<string, unknown>>(`${tmp}.json`)); } catch { /* no outputs */ }
+  spawnSync("rm", ["-f", `${tmp}.json`]);                       // values are never read
+  const declared = (p.bundle.outputs as { name: string }[]).map((o) => o.name);
+  const missing = declared.filter((n) => !produced.includes(n));
+  const ok = r.status === 0 && missing.length === 0;
+  const errTail = ok ? "" : String(r.stderr ?? "").split("\n").filter(Boolean).slice(-6).join("\n");
+  writeFileSync(`${D}/smoke.json`, JSON.stringify({ bundleHash: hash(p.bundle), ok, runnerExit: r.status, missing, at: new Date().toISOString(), error: errTail }, null, 2));
+  console.log(ok ? `✓ smoke test passed: the bundle ran to completion and produced all ${declared.length} declared outputs (values discarded unread).`
+                 : `✗ smoke test failed (runner exit ${r.status}; missing ${missing.join(", ") || "none"})\n${errTail}`);
+}
+
 async function heartbeat() {
   const r = await fetch(`${API}/v2/heartbeat?agent=Instar-1`); const h: any = await r.json();
   console.log(JSON.stringify({ tier: h.tier, owed: h.owed, disputes: h.disputes, arguments: h.arguments, checkKeys: h.checkKeys }, null, 2));
@@ -157,6 +183,6 @@ const run: Record<string, () => Promise<unknown>> = {
   heartbeat,
   new: async () => { if (!kind || !TEMPLATES[kind]) die(`type: ${Object.keys(TEMPLATES).join(" | ")}`); const f = `${dir(name!)}/draft.json`; if (existsSync(f)) die("a draft already exists"); writeFileSync(f, JSON.stringify(TEMPLATES[kind], null, 2)); console.log(`Draft template written to ${f}`); },
   critique: () => critique(name ?? die("name?")), approve: () => approve(name ?? die("name?")), file: () => file(name ?? die("name?")),
-  run: () => runCheck(name ?? die("name?")),
+  run: () => runCheck(name ?? die("name?")), smoke: () => smoke(name ?? die("name?")),
 };
 (run[cmd ?? ""] ?? (async () => die("usage: heartbeat | new <name> <type> | critique <name> | approve <name> | file <name> --live")))().catch((e) => die(String(e?.stack ?? e)));

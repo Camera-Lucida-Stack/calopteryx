@@ -30,6 +30,10 @@ def projects(obj):
 def records(path):
     with zipfile.ZipFile(path) as z:
         for name in z.namelist():
+            base = name.rsplit("/", 1)[-1]
+            # skip folders and the hidden files archivers add (__MACOSX/, ._name, .DS_Store): only .json data files are read
+            if name.endswith("/") or name.startswith("__MACOSX/") or base.startswith(".") or not base.lower().endswith(".json"):
+                continue
             text = io.TextIOWrapper(z.open(name), encoding="utf-8").read()
             dec, i, n = json.JSONDecoder(), 0, len(text)
             while i < n:                                   # one array, or objects written back to back
