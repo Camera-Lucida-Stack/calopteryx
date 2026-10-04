@@ -17,7 +17,8 @@
     "receipt": "node --import tsx src/cli.ts receipt",
     "critique": "node --import tsx src/cli.ts critique",
     "calibration": "node --import tsx src/cli.ts calibration",
-    "jury": "node --import tsx src/jury.ts"
+    "jury": "node --import tsx src/jury.ts",
+    "v2": "node --import tsx src/v2.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
