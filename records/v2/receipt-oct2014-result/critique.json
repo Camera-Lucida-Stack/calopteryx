@@ -1,0 +1,44 @@
+{
+  "payloadHash": "f865552e0f4f493b7793866362c5b91d18df04100f2280d8af9bad99be6ea900",
+  "critique": {
+    "issues": [
+      {
+        "severity": "major",
+        "location": "crossCheck vs outputs; context last sentence",
+        "problem": "The crossCheck block reports a different dataset from the commit: 194,160 rows, a 2026 last deadline year, success_rate 0.667 against 0.452, and n_failed 45,981 against 86,767. The context says only that it re-ran Chrysalis-2's receipt 569fb557. A reader could take the crossCheck figures as an independent replication of this October 2014 crawl result. They contradict it on every shared statistic, and nothing explains why.",
+        "fix": "In the context, say plainly that the cross-check re-runs an unrelated receipt to verify the reproduction pipeline, not this result, and name the dataset and claim that receipt covers. If the protocol expects a cross-check on the same data, add one."
+      },
+      {
+        "severity": "minor",
+        "location": "outputs.n_rows vs n_projects",
+        "problem": "181,642 rows reduce to 181,640 projects. The two dropped rows (duplicates? malformed?) are not explained.",
+        "fix": "Add one clause stating the dedup or exclusion rule, or point to the PLAN.md step that applies it."
+      },
+      {
+        "severity": "minor",
+        "location": "outputs (uncertainty)",
+        "problem": "An SE is given for success_median_over but not for success_p25_over, which is one of the two registered test statistics. The margin is large (0.04 against 0.06), so the verdict is not at risk, but the reporting is asymmetric.",
+        "fix": "Report se_success_p25_over, or state the bootstrap interval for both test statistics."
+      },
+      {
+        "severity": "minor",
+        "location": "outputs",
+        "problem": "The crossCheck reports a percent_funded_agreement sanity check comparing computed ratios with the site's percent-funded field. The main result has no equivalent. That leaves no verification that 'over' (pledged/goal − 1) was computed correctly from the crawl fields, for example currency or goal units.",
+        "fix": "Add an agreement statistic between computed funding ratio and Web Robots' percent_funded field, or state why the field is unavailable in the 2014 crawl."
+      },
+      {
+        "severity": "minor",
+        "location": "context",
+        "problem": "The judged population is the full 2009–2014 decided sample. Mollick's claim concerns projects to July 2012, and that subset is 'reported unjudged'. The subset also passes both thresholds (0.0346 < 0.06; 0.1126 < 0.20), so the verdict is unaffected. Still, a reader may ask why the broader population is the one judged. Excluding projects still live at crawl (n_rows − n_decided ≈ 23k) may also bias the late-2014 cohort.",
+        "fix": "State that the full-sample test was the pre-registered primary in PLAN.md. Note that the July 2012 subset gives the same verdict, and say how live projects were handled."
+      },
+      {
+        "severity": "minor",
+        "location": "context",
+        "problem": "The context does not define the test metric 'over' or the threshold direction, i.e. that confirmed means p25 < 0.06 and median < 0.20, and it does not quote claim C1. A reader cannot check the verdict logic without opening the commitment.",
+        "fix": "Add one sentence defining over = pledged/goal − 1 among successful projects and the confirm condition."
+      }
+    ],
+    "summary": "I found no blocking issues. The arithmetic checks out (n_decided and success_rate are consistent), the coverage gate passed, and both registered statistics clear their thresholds by wide margins in the full sample and in the July 2012 subset. The main risk is that the crossCheck block reports a very different dataset with no explanation, so it could be misread as a failed replication. Clarify its role. The remaining fixes are minor transparency items: the two dropped rows, the missing p25 SE, a ratio-field agreement check, and defining the metric and test direction."
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "payloadHash": "a22d3320d4c9c91b47b1fb013c2ed88e9e3a144d8e91cda3d2f976277880e785",
+  "critique": {
+    "issues": [
+      {
+        "severity": "blocking",
+        "location": "crossCheck (receipt 569fb557 and its outputs)",
+        "problem": "The cross-check does not check this result. It re-runs Chrysalis-2's receipt on a different dataset: 194,160 rows vs 141,823, 157,331 projects vs 90,051, success_rate 0.667 vs 0.480, and last_deadline_year 2026, which is impossible for a crawl dated 22 April 2014. None of its numbers can match the commit's outputs. The context concedes it only reproduces an earlier re-run the archive had already matched, so it adds no independent verification. A reviewer will read the field as either mislabelled or padded.",
+        "fix": "Replace it with an independent re-execution of commit a420a56b on the 22 April 2014 Web Robots crawl, giving matching or near-matching values for the same keys. If none exists, drop the crossCheck block, or move the Chrysalis-2 re-run to a separately labelled context note that says it concerns a different crawl."
+      },
+      {
+        "severity": "major",
+        "location": "outputs.n_launched_by_july_2012 / outcome",
+        "problem": "The outcome rests entirely on one number, 40,266 against the 48,526 threshold. No cross-check reproduces it: the crossCheck block has no n_launched_by_july_2012 key. The count also depends on choices not stated in the draft. It must be cut from 141,823 rows to 90,051 projects by deduplication on some key, and 'launched by the end of July 2012' needs a timestamp field, an inclusive or exclusive cut-off, and a timezone.",
+        "fix": "Have the deciding count independently recomputed and reported alongside the main value. State the dedup key, the launch field (e.g. launched_at), and the exact cut-off (e.g. < 2012-08-01T00:00:00Z UTC). Show they match PLAN.md."
+      },
+      {
+        "severity": "major",
+        "location": "context: 'lower bound for a complete crawl'",
+        "problem": "The coverage rule treats Mollick's 48,526 as a floor for a complete crawl. That only holds if his cleaning removed projects and never added or reclassified them, and if his population (e.g. launch window, project states, goal filters) is no wider than what is counted here. If his sample was defined by deadline or included states this count excludes, the 40,266 versus 48,526 gap could partly be a definitional mismatch rather than missing coverage. The verdict is pre-registered, so it stands. But the interpretation, that the crawl is incomplete, is asserted rather than shown.",
+        "fix": "Cite Mollick's sample definition and note any difference from the count's definition. Alternatively, state that the inconclusive outcome is mechanical under the pre-registered rule, without claiming the crawl is demonstrably incomplete."
+      },
+      {
+        "severity": "minor",
+        "location": "context: 'test statistics ... lie under the registered thresholds'",
+        "problem": "This says the statistics are 'not judged', yet it tells readers which side of the thresholds they fall on. That invites the result to be cited as soft support despite the inconclusive outcome.",
+        "fix": "Either drop the threshold comparison, or add explicitly that, under the pre-registered rule, the statistics carry no evidential weight for the claim from this crawl."
+      },
+      {
+        "severity": "minor",
+        "location": "context: forecast P(inconclusive) = 0.05",
+        "problem": "The forecast was premised on misidentifying the crawl. Readers may ask whether the dataset was fixed at commitment or changed during the 'correction'.",
+        "fix": "State that the corrected commitment named this specific crawl (file or date) before the result was seen, and link the coverage table that caused the misidentification."
+      },
+      {
+        "severity": "minor",
+        "location": "outputs: *_to_july_2012 values; crossCheck.percent_funded_agreement",
+        "problem": "Precision is inconsistent: 0.114 and 0.0356 are given to 3–4 decimals while other values have 6. percent_funded_agreement is undefined, and it has no counterpart in the main outputs.",
+        "fix": "Report all values at uniform precision, and define or remove percent_funded_agreement."
+      }
+    ],
+    "summary": "The inconclusive verdict follows mechanically from the pre-registered coverage rule (40,266 < 48,526). The arithmetic is internally consistent: decided = failed + successful, and success rates match. The serious problem is the crossCheck block. It reproduces a different analysis on a different, much later dataset, so it neither verifies this commit nor the single count that decides the outcome. That count needs an independent recomputation and a fully specified definition. The context should also avoid hinting that the unjudged statistics support the claim."
+  }
+}

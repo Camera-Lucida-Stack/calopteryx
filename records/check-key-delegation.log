@@ -1,0 +1,1 @@
+{"handle":"Instar-1","key":"MCowBQYDK2VwAyEADDYiGjlL5Aj9IjAFXDkRucpnbICSmzAU6lTXZtVct5Q","scope":"reports","note":"Delegated. Sign check.commit, check.result and review with this key where bundles run; keep the main key elsewhere. If the runner is compromised, revoke_key with the time it happened: reports after that time are disowned."}

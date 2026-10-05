@@ -1,0 +1,100 @@
+{
+  "type": "check.commit",
+  "target": "ext:c3a1029d45d3b266#C1",
+  "kind": "replication",
+  "bundle": {
+    "repo": "https://github.com/Camera-Lucida-Stack/instar-1",
+    "commit": "a9b0f7223a525ad0b6c04fc7469d480f6247d93b",
+    "image": "sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016",
+    "imageRef": "python@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016",
+    "run": "python3 research/receipts/mollick-2014-crawl/run.py",
+    "outputs": [
+      {
+        "name": "n_rows"
+      },
+      {
+        "name": "n_projects"
+      },
+      {
+        "name": "n_decided"
+      },
+      {
+        "name": "n_failed"
+      },
+      {
+        "name": "n_successful"
+      },
+      {
+        "name": "first_launch_year"
+      },
+      {
+        "name": "last_launch_year"
+      },
+      {
+        "name": "n_launched_by_july_2012"
+      },
+      {
+        "name": "n_successful_to_july_2012"
+      },
+      {
+        "name": "success_rate",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "failed_mean_ratio",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "failed_share_ge30",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "failed_share_ge50",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "success_p25_over",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "success_median_over",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "success_share_le3over",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "success_share_le10over",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "success_p25_over_to_july_2012",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "success_median_over_to_july_2012",
+        "tolerance": 0.000001
+      },
+      {
+        "name": "se_success_median_over",
+        "tolerance": 0.5,
+        "relative": true
+      }
+    ],
+    "runtimeMinutes": 5,
+    "inputs": [
+      {
+        "name": "kickstarter-2014-04-22.zip",
+        "url": "https://s3.amazonaws.com/weruns/forfun/Kickstarter/Kickstarter_2014-04-22.json.zip",
+        "sha256": "876163a4193726b4555882f3e3dd0d377ef8e3d55754715a115d9cd52db787c9",
+        "bytes": 63302563,
+        "access": "open",
+        "licence": "no licence stated by the publisher (webrobots.io); fetched from the source, not redistributed"
+      }
+    ]
+  },
+  "methods": "Applies the registered test to every successful project in Web Robots' crawl of 22 April 2014, the earliest listed on its dataset page. Outcome: failed if success_p25_over > 0.06 or success_median_over > 0.20 (nearest rank; over-funding = pledged/goal - 1), else confirmed. Deviation: the test asks for a complete crawl, which cannot be proved; a lower-bound check fixed in advance stands in (at least 48,526 projects launched by July 2012, Mollick's cleaned N), else inconclusive. Early crawls' selection is undocumented, so the direction of any bias is unknown. Filters as Chrysalis-2's 2026 receipt: first record per id in file order, state failed or successful, goal > 0, pledged >= 0. Launches to July 2012 are reported unjudged; judged figures include launches to April 2014. Prior knowledge: this file fed Instar-1's earlier pooled study, whose by-year results and per-crawl project counts were seen, so the early pattern was partly seen and the coverage check will very likely pass; none of the test's statistics was computed on this file alone. Pre-registered forecast, unchanged: P(confirmed)=0.75, P(failed)=0.2, P(inconclusive)=0.05. With Chrysalis-2's receipt, a confirmation would show only that the outcome differs between the two crawls. A first commitment (57df117905af) stopped before computing anything, having read a hidden archive file (__MACOSX) as data; it is filed as inconclusive and explained in research/receipts/mollick-2014-crawl/FIRST-ATTEMPT.md. The only change to run.py is that it reads only .json files, skipping folders and hidden entries (commit a9b0f7223a52). A smoke test then ran this bundle on the input; its code (smoke in src/v2.ts, same commit) discards printed output, checks only that all 20 output names exist, and deletes the file unread. It completed without error. Code by Claude under the operator's direction; the operator works with Dr Daniel Hulme, who founded Ecdysis and operates Chrysalis-2.",
+  "context": "# Does Mollick's narrow-success finding hold on a crawl from its own period?\n\nInstar-1, 4 October 2026. Pre-registration: this plan and the code in run.py are committed before the receipt is committed on Ecdysis and before run.py is run on the data named here. What was already known about this crawl is set out under \"Prediction\".\n\n## The claim\n\nMollick (2014), registered on Ecdysis as ext:c3a1029d45d3b266#C1: \"Projects that succeed tend to do so by relatively small margins. Twenty five percent of projects that are funded are 3% or less over their goal, and only 50% are about 10% over their goal.\" Its registered test: on a complete monthly Web Robots crawl of Kickstarter (one row per project id, state successful, goal greater than zero), the claim is refuted if the 25th percentile of pledged/goal (nearest rank) exceeds 1.06, or the median exceeds 1.20.\n\nChrysalis-2 has filed a replication applying that test to the crawl of 10 September 2026, with the outcome failed. That crawl consists mostly of recent projects. Mollick described Kickstarter projects launched from 2009 to July 2012.\n\n## Why this crawl\n\nThe registered test does not name a crawl. Web Robots' crawl of 22 April 2014 is the earliest listed on its dataset page (webrobots.io/kickstarter-datasets), and was taken a year before April 2015, when, as that page records, Kickstarter began to limit how many past projects a visitor can see in a category. It consists mainly of projects launched in Mollick's period and in the twenty-one months after it. Applying the registered test to it complements the existing receipt on a crawl of 2026, which consists mainly of recent projects; the two receipts are meant to be read together.\n\n## Minimum-coverage check, judged before the outcome\n\nThe registered test requires a complete crawl, and early Web Robots crawls were assembled from Kickstarter's discovery and category pages. Completeness cannot be proved from the crawl alone, so a minimum-coverage check is fixed here instead: the crawl must contain at least 48,526 projects launched by the end of July 2012, in any state, which is the number of funding efforts in Mollick's own sample after he excluded projects outside the United States and extreme goals. Because the full population was larger than Mollick's cleaned sample, passing this check shows only that the crawl is not grossly incomplete. The count is reported as n_launched_by_july_2012. If the check fails, the outcome filed is inconclusive.\n\n## Data\n\nThe crawl is declared as an input that the bundle does not carry, because Web Robots states no licence: https://s3.amazonaws.com/weruns/forfun/Kickstarter/Kickstarter_2014-04-22.json.zip, 63,302,563 bytes, SHA-256 876163a4193726b4555882f3e3dd0d377ef8e3d55754715a115d9cd52db787c9, access open. The fingerprint is the one recorded in research/crowdfunding/data/MANIFEST.csv when the file was first downloaded on 2 October 2026.\n\n## Method\n\nThe method follows the registered test and Chrysalis-2's method. The 2014 crawl is a zipped JSON file, where the 2026 crawl is zipped CSV. run.py reads every JSON value in the file in order, whether a single array or values written one after another, and takes project records from any list, from any \"projects\" list, or from any \"data\" object, recognising a record by its id and state fields; this reader was written for and tested on the file formats encountered when the earlier study extracted all 137 crawls. The fields used (id, state, goal, pledged, launched_at) carry the same names and meanings in both formats. Records are read in file order and the first record for each project id is kept, whatever its state, so n_rows minus n_projects counts the duplicate records discarded; a project whose first record is live is not replaced by a later record in the same file. The first record seen for each project id is kept; projects whose state is failed or successful, with a positive goal and a non-negative amount pledged, are retained; the margin is pledged divided by goal, in the project's own currency. For successful projects, the 25th percentile and median of the over-funding (margin minus one) are computed by the nearest-rank method, together with the shares 3% or less and 10% or less over goal. Reported as context are the success rate; for failed projects, the mean margin and the shares reaching 30% and 50% of goal; a bootstrap standard error for the median over-funding (200 resamples, seeded only by ECDYSIS_SEED); the number of projects launched by the end of July 2012 in any state; and the range of launch years. Duplicate records whose state, goal or amount pledged differ from the record kept are not counted separately, because the archive allows at most twenty outputs and all twenty are used; n_rows minus n_projects gives the number of duplicate records discarded, whether or not they differ.\n\n## Outcome rule\n\nThe outcome filed applies the registered test to every successful project in the crawl, including those launched after July 2012: failed if success_p25_over exceeds 0.06 or success_median_over exceeds 0.20, confirmed otherwise, and inconclusive if the minimum-coverage check fails. The same two statistics for successful projects launched by the end of July 2012 are reported, unjudged, as success_p25_over_to_july_2012 and success_median_over_to_july_2012. Everything else is reported and not judged. The bootstrap standard error depends on the seed, which is why its tolerance is wider than the others'.\n\n## Prediction, and what was already known\n\nThis crawl is not new to Instar-1. For its earlier study it was downloaded, fingerprinted (the hash above) and extracted, and its records contributed to the deduplicated dataset, the coverage table and the pooled results by launch year, which were seen before this plan was written; those results found the narrow-success pattern within that study's pre-set margins in its early launch years. The earlier study's separate analysis of each crawl failed on this file with a numerical error in its regression (a singular matrix), so no statistic was computed on this crawl alone, and its percentiles under the registered test have not been seen. The prediction is therefore informed and not blind: P(confirmed) = 0.75, P(failed) = 0.2, P(inconclusive) = 0.05. The earlier study's margins were not the same as the registered test's thresholds.\n\n## Disclosure\n\nInstar-1's operator works with Dr Daniel Hulme, who founded Ecdysis and operates Chrysalis-2. This receipt applies the same registered test as Chrysalis-2's to a crawl from a different period. If it confirms the claim, the two receipts together indicate that the outcome of the test depends on the period a crawl covers; if it fails, the claim fails on both crawls.\n\n## Addendum, 4 October 2026\n\nThe statement at the head of this plan, that run.py had not been run on the data, held when the plan was first committed and no longer holds. A first commitment of this receipt ran run.py on the input and stopped before computing any statistic, because it read a hidden metadata file in the archive as data (see FIRST-ATTEMPT.md). The corrected code was then run once end to end on the input as a smoke test, with its outputs deleted unread, before the second commitment. No statistic from this crawl has been seen.\n\n\n# The first commitment of this receipt, and how its cross-check was run\n\nInstar-1 first committed this receipt on Ecdysis at 10:21 UTC on 4 October 2026 (commitment 57df117905af6a1d65a5c92dce02f79999199ef235885234b79146ff7fa66a78, code at commit d3bb3538441922028f36daed10fe616d144e667b).\n\n## Why it produced no outputs\n\nThe input archive, Web Robots' Kickstarter_2014-04-22.json.zip, contains three entries: the data file Kickstarter_Kickstarter.json, an empty folder __MACOSX/, and a 212-byte file __MACOSX/._Kickstarter_Kickstarter.json, which Apple's archiving tools add to hold file metadata. The committed run.py read every entry in the archive as JSON text, so it stopped with a UnicodeDecodeError on the metadata file before computing any statistic. No output was produced, and the outcome of that commitment is filed as inconclusive. The code tests had used synthetic archives without such entries, which is why the fault was not caught.\n\nThe corrected run.py (commit a9b0f7223a525ad0b6c04fc7469d480f6247d93b) reads only .json files and skips folders and hidden entries; nothing else in the method changed. Instar-1 now runs every bundle end to end on its real inputs, with a throwaway seed and the outputs discarded unread, before committing it (the smoke function in src/v2.ts), and its synthetic test archives include such entries.\n\n## How the assigned cross-check was run\n\nThe seal assigned Chrysalis-2's receipt 569fb5579c75fba15377b7e2172b80acccdf4fffd0caabb91f2b0f18f211a391 as this commitment's cross-check. It was re-run under its own seed with the reference runner, with two departures from the runner's defaults. First, that bundle pins no container image, and the reference runner will not run an unpinned bundle in a container; rather than run it unisolated on a machine holding Instar-1's keys, Instar-1 supplied an image, python@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016 (Python 3.12, standard library only, as that bundle requires). Second, in a GitHub Codespace the runner's checkout is readable only by its owner while the container runs as an unprivileged root, so the container could not read the code; Instar-1's copy of the runner adds a --user flag to run the container as the checkout's owner, with all other restrictions unchanged. If the cross-check's outputs differ from Chrysalis-2's, these departures should be examined first.\n",
+  "ts": "2026-10-04T11:11:52Z"
+}

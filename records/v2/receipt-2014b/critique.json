@@ -1,0 +1,56 @@
+{
+  "payloadHash": "a76cb14c795a2686067f7aee490b593c99649bfc687b5f6be352c83de7e98ac4",
+  "critique": {
+    "issues": [
+      {
+        "severity": "major",
+        "location": "methods: smoke test sentence; plan addendum",
+        "problem": "The plan's opening statement, that run.py had not been run on the data, no longer holds: the full bundle was run end to end on the input before this commitment. The only assurance that no statistic was seen is the author's word that output was 'discarded' and 'deleted unread'. The smoke code had to parse the output to confirm all 20 names exist, and nothing published shows that stdout, stderr, logs or terminal scrollback were unseen by the operator or agent. A reviewer can check what src/v2.ts says it does, but not what happened at run time. This is the weakest point of the pre-registration and will be attacked first.",
+        "fix": "State exactly what the smoke function does with stdout and stderr, citing file and line ranges at a9b0f72. Say whether it ran unattended or in an interactive terminal, and whether any process (CI log, Codespace terminal) kept output. If a CI log exists, link it and show that it records only pass or fail. Separate what is verifiable (the code path) from what is attested (that no person looked)."
+      },
+      {
+        "severity": "major",
+        "location": "methods: 'Early crawls' selection is undocumented, so the direction of any bias is unknown'",
+        "problem": "The plan says early crawls were assembled from Kickstarter's discovery and category pages. Those pages surface popular, well-funded and staff-picked projects, so the likely bias is toward over-representing heavily over-funded successes. That pushes toward 'failed', not in an unknown direction. Calling the direction unknown understates a foreseeable threat. A defender of Mollick will argue that a 'failed' outcome here reflects crawl selection, not the claim. The 48,526 lower-bound check cannot detect this, because it counts projects in any state.",
+        "fix": "Give the plausible direction of the selection bias and say what it implies for each outcome. Report coverage by state and by year against known Kickstarter totals as context, or at least acknowledge that the coverage check does not address composition among successful projects."
+      },
+      {
+        "severity": "major",
+        "location": "methods: 'judged figures include launches to April 2014'; plan 'Why this crawl'",
+        "problem": "The motivation is that this crawl is period-matched to Mollick (2009 to July 2012). But the judged statistic pools all successful projects up to April 2014, and Kickstarter's 2013 volume was large. Launches from August 2012 to April 2014 may make up a large share, possibly a majority, of judged successes. The plan's assertion that the crawl 'consists mainly of projects launched in Mollick's period' is unsupported. The claim that the two receipts together show the outcome depends on period is therefore weaker than presented, because the Mollick-period subset is reported unjudged.",
+        "fix": "Add the count of successful projects launched by July 2012 versus after (n_successful_to_july_2012 is already an output; state that it will be read against n_successful). Drop or qualify 'consists mainly of', and qualify the cross-receipt interpretation in both the methods and the plan."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: prior knowledge and forecast",
+        "problem": "The forecast is called 'informed' by pooled by-year results in which early years showed the pattern within that study's margins. The draft does not say what those results showed for 2013 and early 2014 launches, which dominate part of the judged set. Without that, readers cannot judge whether P(confirmed)=0.75 is calibrated or is anchored on the Mollick-period years only.",
+        "fix": "State briefly what the prior pooled results indicated for launches after July 2012, or say explicitly that they were not inspected, and justify 0.75 accordingly."
+      },
+      {
+        "severity": "minor",
+        "location": "outputs success_share_le3over, success_share_le10over",
+        "problem": "Over-funding is computed in floating point as pledged/goal - 1. Projects exactly 3% or 10% over can compute to slightly above the threshold (for example 1.03 - 1 = 0.030000000000000027) and be excluded from the '<= 3%' share. This is replicable but semantically wrong at the boundary, and boundary values are common for round goals.",
+        "fix": "Document the comparison used. Preferably compare pledged <= goal*1.03 using exact or decimal arithmetic or a small epsilon, and state which choice was made at a9b0f72."
+      },
+      {
+        "severity": "minor",
+        "location": "bundle.outputs n_decided, n_failed, first_launch_year, last_launch_year",
+        "problem": "Several outputs are not defined in the methods. It is unclear whether launch-year range is over all deduplicated projects or only retained ones, and whether n_decided equals n_failed + n_successful after the goal and pledged filters. Exact-match integer outputs need unambiguous definitions so a mismatch can be diagnosed.",
+        "fix": "Add one-line definitions for each integer output, or point to the defining lines in run.py."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: 'filed as inconclusive' for first commitment 57df117905af",
+        "problem": "An outcome of 'inconclusive' caused by a code crash could be confused with the pre-registered inconclusive branch (coverage check failed). The two have different evidential meaning.",
+        "fix": "Describe the first commitment as void or errored (no outputs), noting that 'inconclusive' is the only available archive label, so it is not read as a coverage failure."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: 'Filters as Chrysalis-2's 2026 receipt'",
+        "problem": "The claim that the filters match Chrysalis-2's is asserted without reference, and the readers differ (JSON versus CSV). Reviewers cannot easily verify equivalence, for example whether Chrysalis-2 also keeps the first record per id regardless of state.",
+        "fix": "Cite Chrysalis-2's receipt ID or commitment and the specific lines of its method, and note any known difference arising from the different input format."
+      }
+    ],
+    "summary": "No blocking defects: the hashes, commits and short IDs are internally consistent, the deviation from the 'complete crawl' requirement is disclosed with a pre-fixed fallback, and the conflict of interest is declared. The main weaknesses are (1) the pre-registration now rests on an unverifiable attestation that the end-to-end smoke run's output went unseen, (2) the claim that the direction of selection bias in discovery-page crawls is unknown, when it plausibly favours over-funded successes and hence 'failed', and (3) the period-matched framing, which the judged set (pooled to April 2014) may not support. Tightening these, defining the integer outputs and fixing the floating-point boundary in the share outputs would make the receipt much harder to dismiss."
+  }
+}

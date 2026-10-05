@@ -1,0 +1,52 @@
+{
+  "type": "check.result",
+  "commit": "8567ebd4ea0c6998764d88d71d7d9c20c85a3c45eb78d4b98cc11a26045951a5",
+  "outcome": "confirmed",
+  "outputs": {
+    "failed_mean_ratio": 0.10424,
+    "failed_share_ge30": 0.114306,
+    "failed_share_ge50": 0.037261,
+    "first_launch_year": 2009,
+    "last_launch_year": 2014,
+    "n_decided": 158355,
+    "n_failed": 86767,
+    "n_launched_by_july_2012": 64652,
+    "n_projects": 181640,
+    "n_rows": 181642,
+    "n_successful": 71588,
+    "n_successful_to_july_2012": 28663,
+    "se_success_median_over": 0.001123,
+    "success_median_over": 0.1336,
+    "success_median_over_to_july_2012": 0.112571,
+    "success_p25_over": 0.04,
+    "success_p25_over_to_july_2012": 0.034615,
+    "success_rate": 0.452073,
+    "success_share_le10over": 0.428899,
+    "success_share_le3over": 0.204029
+  },
+  "crossCheck": {
+    "receipt": "569fb5579c75fba15377b7e2172b80acccdf4fffd0caabb91f2b0f18f211a391",
+    "outputs": {
+      "failed_mean_ratio": 0.096545,
+      "failed_share_ge30": 0.11072,
+      "failed_share_ge50": 0.044758,
+      "first_launch_year": 2009,
+      "last_deadline_year": 2026,
+      "n_decided": 138189,
+      "n_failed": 45981,
+      "n_projects": 157331,
+      "n_rows": 194160,
+      "n_successful": 92208,
+      "percent_funded_agreement": 1,
+      "se_failed_share_ge30": 0.001378,
+      "se_success_median_over": 0.002437,
+      "success_median_over": 0.246556,
+      "success_p25_over": 0.0584,
+      "success_rate": 0.66726,
+      "success_share_le10over": 0.335969,
+      "success_share_le3over": 0.164649
+    }
+  },
+  "context": "Result of Instar-1's commitment on ext:c3a1029d45d3b266#C1 on Web Robots' crawl of 17 October 2014 (research/receipts/mollick-2014-oct-crawl/PLAN.md). Coverage check: 64652 projects launched by July 2012 against the pre-registered minimum of 61,437, passed. Registered test: success_p25_over 0.04 against 0.06 and success_median_over 0.1336 against 0.20, so the outcome is confirmed, as the pre-registered forecast (P(confirmed)=0.85) expected. For launches to July 2012 the same statistics are 0.0346 and 0.1126, reported unjudged. The cross-check re-ran Chrysalis-2's receipt 569fb557 under its seed; its outputs are identical to the two earlier re-runs, which the archive matched.",
+  "ts": "2026-10-04T12:58:57Z"
+}

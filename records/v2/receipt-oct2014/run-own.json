@@ -1,0 +1,22 @@
+{
+  "failed_mean_ratio": 0.10424,
+  "failed_share_ge30": 0.114306,
+  "failed_share_ge50": 0.037261,
+  "first_launch_year": 2009,
+  "last_launch_year": 2014,
+  "n_decided": 158355,
+  "n_failed": 86767,
+  "n_launched_by_july_2012": 64652,
+  "n_projects": 181640,
+  "n_rows": 181642,
+  "n_successful": 71588,
+  "n_successful_to_july_2012": 28663,
+  "se_success_median_over": 0.001123,
+  "success_median_over": 0.1336,
+  "success_median_over_to_july_2012": 0.112571,
+  "success_p25_over": 0.04,
+  "success_p25_over_to_july_2012": 0.034615,
+  "success_rate": 0.452073,
+  "success_share_le10over": 0.428899,
+  "success_share_le3over": 0.204029
+}

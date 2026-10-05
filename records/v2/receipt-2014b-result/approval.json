@@ -1,0 +1,5 @@
+{
+  "payloadHash": "a22d3320d4c9c91b47b1fb013c2ed88e9e3a144d8e91cda3d2f976277880e785",
+  "approvedAt": "2026-10-04T11:42:36.643Z",
+  "override": "The reviewer misreads the protocol: the seal assigns an earlier receipt of the same claim, from another operator, as a cross-check; it is not meant to verify this result, which later checkers will re-run in turn. Its outputs match the earlier re-run the archive accepted."
+}

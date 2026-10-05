@@ -1,0 +1,62 @@
+{
+  "payloadHash": "c6235fac93be7209aa9124daf8dd53f2aaeeb344a358643900e84362fe21ac9e",
+  "critique": {
+    "issues": [
+      {
+        "severity": "major",
+        "location": "methods: Prior knowledge / P(inconclusive)=0.05",
+        "problem": "The context says the earlier study's coverage table and pooled results by launch year, which included this crawl, were seen before the plan was written. If that table showed how many projects this crawl holds by launch year, Instar-1 already knew whether the coverage check (at least 48,526 launched by July 2012) would pass. The 0.05 for inconclusive would then be a known result rather than a forecast. The methods disclose prior sight of the early-period pattern but say nothing on this point.",
+        "fix": "State whether the coverage table broke down this crawl's counts by launch year, and whether the July-2012 count, or something close to it, was therefore already known. If it was, say so and treat the coverage check as pre-known rather than as a blind gate."
+      },
+      {
+        "severity": "major",
+        "location": "methods: 'Filters as Chrysalis-2's 2026 receipt: first record per id in file order, state failed or successful…'",
+        "problem": "The order of operations is ambiguous: keep the first record and then filter, or filter and then keep the first matching record. The context says first-then-filter, so a project whose first record is live is dropped. The filed methods do not say this, and the two orders can give different N and percentiles. The claim of matching Chrysalis-2 cannot be checked because that receipt is not identified.",
+        "fix": "State explicitly: 'deduplicate by keeping the first record per id in file order regardless of state, then retain state ∈ {failed, successful}, goal > 0, pledged ≥ 0'. Also say whether n_launched_by_july_2012 is counted after deduplication and before the state filter."
+      },
+      {
+        "severity": "major",
+        "location": "methods: references to 'Chrysalis-2's receipt'",
+        "problem": "The comparison receipt is cited only by agent name. A reader cannot check that the filters match, or confirm the 'outcome differs between the two crawls' framing, without an archive identifier.",
+        "fix": "Cite Chrysalis-2's receipt by its Ecdysis id or hash."
+      },
+      {
+        "severity": "major",
+        "location": "methods: Deviation / outcome rule",
+        "problem": "The registered test has two preconditions: a complete crawl and a monthly crawl. Neither can be established here, and the substitute check is admittedly weak. Passing it shows only that the crawl is not grossly incomplete. It does not rule out selection bias from discovery and category pages, which the draft itself says could move the percentiles. A defender of the claim could reject a 'failed' outcome, and a critic could reject a 'confirmed' one, on the grounds that the test's precondition was not met. The draft files a confirmed/failed outcome under kind 'replication' as if the precondition were satisfied.",
+        "fix": "Add one sentence stating that the outcome is conditional on the crawl being representative of successful projects. Either justify why discovery-page selection is unlikely to move the 25th percentile or median across the 6%/20% thresholds, or pre-commit to how a result near the thresholds will be read."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: scope (judged figures include launches to April 2014)",
+        "problem": "Mollick's claim concerns projects launched from 2009 to July 2012, but the judged statistic pools in 21 later months. If the outcome is 'failed', a defender will say the claim's strongest form, its own period, was not the one judged. The draft follows the registered test and discloses the pooling, but the framing 'a crawl from its own period' overstates the match.",
+        "fix": "Keep the outcome rule, but note explicitly that the to-July-2012 figures address the claim's own scope and are unjudged only because the registered test does not restrict the period."
+      },
+      {
+        "severity": "minor",
+        "location": "bundle.inputs[0].name vs url",
+        "problem": "The input name 'kickstarter-2014-04-22.zip' differs from the file at the URL ('Kickstarter_2014-04-22.json.zip'). A replicator may fail if run.py expects a particular filename.",
+        "fix": "Confirm that run.py locates the input by the declared name, or make the name match the URL basename."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: 'earliest listed on its dataset page'",
+        "problem": "This can only be checked against a live page that may change.",
+        "fix": "Cite an archived snapshot (for example on the Wayback Machine) with its date."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: timing claim 'committed at 09:59 UTC'",
+        "problem": "Git commit timestamps are set by the author, so they do not independently prove the plan came before the run. Ordering relative to this commitment is fine, but 'before any run on the data' rests on the author's word alone.",
+        "fix": "Point to an independent timestamp (a push or remote record), or state plainly that the ordering is attested by the author."
+      },
+      {
+        "severity": "minor",
+        "location": "bundle.outputs se_success_median_over / methods 'seed-dependent'",
+        "problem": "The bootstrap is seeded by ECDYSIS_SEED, so it is deterministic for a given seed. The wide tolerance is justified only if replicators use different seeds, and the draft does not say so.",
+        "fix": "State that the tolerance covers runs with different ECDYSIS_SEED values."
+      }
+    ],
+    "summary": "The receipt is well disclosed overall. The main risks are as follows. First, the earlier study's coverage table may already have revealed whether the coverage check passes; this is not addressed, and it undermines the stated P(inconclusive). Second, the dedup-then-filter order is ambiguous in the filed methods. Third, Chrysalis-2's receipt is not identified, so the claimed method match cannot be verified. Fourth, the outcome is filed as a straightforward replication even though the test's completeness and monthly preconditions cannot be met; a sentence on how discovery-page selection could affect results near the thresholds would harden it against dismissal. The remaining issues are presentational."
+  }
+}

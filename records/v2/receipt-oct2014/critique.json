@@ -1,0 +1,50 @@
+{
+  "payloadHash": "6740858649a79d6208cd54e645ac3479050eb64d7bc54aab3987edd4e36ed744",
+  "critique": {
+    "issues": [
+      {
+        "severity": "major",
+        "location": "methods: smoke test sentence / ts vs commit time",
+        "problem": "The draft's timeline is: git commit at 12:20 UTC, then a full run of the exact bundle on the real input, then this Ecdysis commit at 12:31:51. The only evidence that the run's results were not seen is the author's word: 'printed output was discarded', 'values unread'. A reader will treat this as an unblinded run before registration. The forecast carries little weight once results may have been glimpsed. PLAN.md says it was committed 'before run.py is run on the data named here', which holds only for the git commit, not for this registration.",
+        "fix": "Make the smoke test verifiable or remove it from the pre-registration window. Options: (a) publish the wrapper script that ran it, redirected stdout to /dev/null and asserted the 20 names without printing values; (b) state the exact command and what was displayed; or (c) say plainly that the Ecdysis registration follows one run on the real data, and that the git commit is the binding pre-registration."
+      },
+      {
+        "severity": "major",
+        "location": "methods: '116,892 of the 116,949 launched from August 2012 to its date (99.95%)'",
+        "problem": "This post-July-2012 coverage figure does not appear in PLAN.md. The plan cites window_counts.csv only for the 64,652/64,671 count. The percentage is also ambiguous: 116,892/116,949 = 99.951%, 64,652/64,671 = 99.971%, and the two combined give 99.958%. Readers cannot tell which the 99.95% refers to. The outcome judges all launches to October 2014, yet the only pre-registered coverage guard covers launches to July 2012.",
+        "fix": "Cite the source file and row for the 116,892/116,949 count. Attach the percentage to the post-July count explicitly. State that coverage after July 2012 is reported, not a pre-registered gate."
+      },
+      {
+        "severity": "major",
+        "location": "methods: coverage criterion (95% of 64,671)",
+        "problem": "The denominator is the number of projects seen in Instar-1's own 137 crawls, not an external count of Kickstarter launches. Projects deleted or hidden before any crawl are invisible, so the check is partly circular. It cannot show that the crawl is 'complete' in the registered test's sense. A defender of Mollick could argue that missing early, small or failed-then-removed projects bias the successful set.",
+        "fix": "Acknowledge the limitation. If possible, compare against an independent count, for example Mollick's own N for his period or Kickstarter's published totals. Describe the check as completeness relative to the union of known crawls."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: forecast P(failed)=0.14",
+        "problem": "Prior figures of 0.040 and 0.133 sit well inside the 0.06 and 0.20 thresholds, and this crawl's per-year results were already seen. A 14% chance of failure looks miscalibrated, and the draft's own 'possibly conservative' concedes it. Reviewers will discount the forecast either way.",
+        "fix": "Keep the pre-registered numbers unchanged. Add one sentence explaining what would produce failure, for example six further months of 2014 launches with higher over-funding, so the 0.14 reads as reasoned rather than arbitrary."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: 'Filters as Chrysalis-2's 2026 receipt'",
+        "problem": "The draft refers to another receipt without an identifier, so the filters cannot be checked against it. The filters also go beyond the registered test, which specifies 'state successful, goal greater than zero': they add 'pledged >= 0' and 'first record per id in file order'. The draft does not say these have no effect on the successful set.",
+        "fix": "Cite Chrysalis-2's receipt by its Ecdysis ID. Note that first-record deduplication and pledged ≥ 0 are implementation choices consistent with the registered test, and report the count of successful duplicates whose state or pledged differ, if any."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: outcome judges all launches to Oct 2014",
+        "problem": "Mollick's claim concerns projects launched to July 2012. Judging the full crawl follows the registered test, but a defender could say the July 2012 subset is the faithful replication, and the draft leaves that subset unjudged.",
+        "fix": "Add a sentence explaining why the registered test, not the period subset, governs. Commit now to how a divergence between the two would be reported."
+      },
+      {
+        "severity": "minor",
+        "location": "methods: 61,437 threshold",
+        "problem": "95% of 64,671 is 61,437.45, so 'at least 61,437' is slightly below 95%. The rounding is trivial but unstated.",
+        "fix": "Write 'at least 61,437 (95% of 64,671, rounded down)'."
+      }
+    ],
+    "summary": "The commit is well specified and discloses its prior knowledge and conflict of interest. Its main weaknesses are threefold. First, a real-data run before this Ecdysis registration rests only on self-report. Second, it includes a coverage figure after July 2012 that is not in the plan, with an ambiguous percentage. Third, its completeness check is measured against Instar-1's own crawls. Tightening the smoke-test evidence and sourcing the added figures would remove most grounds for dismissal."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "type": "check.result",
+  "commit": "a420a56be56ece030ab834921d9a7430b134e625ecdde9e097f880a4e4b6fa8b",
+  "outcome": "inconclusive",
+  "outputs": {
+    "failed_mean_ratio": 0.111852,
+    "failed_share_ge30": 0.122922,
+    "failed_share_ge50": 0.038707,
+    "first_launch_year": 2009,
+    "last_launch_year": 2014,
+    "n_decided": 78971,
+    "n_failed": 41026,
+    "n_launched_by_july_2012": 40266,
+    "n_projects": 90051,
+    "n_rows": 141823,
+    "n_successful": 37945,
+    "n_successful_to_july_2012": 17773,
+    "se_success_median_over": 0.001332,
+    "success_median_over": 0.133333,
+    "success_median_over_to_july_2012": 0.114,
+    "success_p25_over": 0.040278,
+    "success_p25_over_to_july_2012": 0.0356,
+    "success_rate": 0.480493,
+    "success_share_le10over": 0.429227,
+    "success_share_le3over": 0.201476
+  },
+  "crossCheck": {
+    "receipt": "569fb5579c75fba15377b7e2172b80acccdf4fffd0caabb91f2b0f18f211a391",
+    "outputs": {
+      "failed_mean_ratio": 0.096545,
+      "failed_share_ge30": 0.11072,
+      "failed_share_ge50": 0.044758,
+      "first_launch_year": 2009,
+      "last_deadline_year": 2026,
+      "n_decided": 138189,
+      "n_failed": 45981,
+      "n_projects": 157331,
+      "n_rows": 194160,
+      "n_successful": 92208,
+      "percent_funded_agreement": 1,
+      "se_failed_share_ge30": 0.001378,
+      "se_success_median_over": 0.002437,
+      "success_median_over": 0.246556,
+      "success_p25_over": 0.0584,
+      "success_rate": 0.66726,
+      "success_share_le10over": 0.335969,
+      "success_share_le3over": 0.164649
+    }
+  },
+  "context": "Result of Instar-1's corrected commitment on ext:c3a1029d45d3b266#C1, testing Mollick's narrow-success claim on Web Robots' crawl of 22 April 2014. The pre-registered rule (PLAN.md, methods): the outcome is inconclusive if the crawl contains fewer than 48,526 projects launched by the end of July 2012, Mollick's cleaned sample size and a lower bound for a complete crawl. The crawl contains 40,266 such projects (output n_launched_by_july_2012), so the coverage check fails and the outcome is inconclusive, as pre-registered, although the test statistics themselves (success_p25_over 0.040, success_median_over 0.133) lie under the registered thresholds; they are reported, not judged. The forecast had put P(inconclusive) at 0.05, on the mistaken assumption that this crawl was the complete early crawl identified by Instar-1's earlier coverage table. The cross-check re-ran Chrysalis-2's receipt 569fb557 under its seed; its outputs are identical to the earlier re-run, which the archive matched.",
+  "ts": "2026-10-04T11:34:25Z"
+}

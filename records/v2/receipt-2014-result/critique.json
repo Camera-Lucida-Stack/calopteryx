@@ -1,0 +1,38 @@
+{
+  "payloadHash": "1ab9bfc2ff28ccf17489347609656626835cb04a82837548fedf08eb00041b1b",
+  "critique": {
+    "issues": [
+      {
+        "severity": "major",
+        "location": "crossCheck.outputs.last_deadline_year",
+        "problem": "The input is a Kickstarter crawl taken on 22 April 2014. Kickstarter campaigns ran for at most 60 days, so no project in it can have a deadline in 2026. A value of 2026 points to a fault: a timestamp parsed in the wrong unit, a sentinel or corrupt value, or the wrong or altered input being read. The archive compares this output with Chrysalis-2's, so filing it unexamined risks it later being found wrong, or the mismatch being blamed on Instar-1's two departures from the reference runner.",
+        "fix": "Before filing, confirm the cross-check ran on the correct archive by recording and checking its hash against the bundle's pinned input. Then check how this value arises (for example, list the projects with deadlines after 2014-06). If it is genuinely what Chrysalis-2's code produces, file it unchanged. Note the anomaly in the public account rather than altering the outputs."
+      },
+      {
+        "severity": "major",
+        "location": "outputs (status, cross_check_conditions)",
+        "problem": "The context says the result format has no field for explanations, yet the draft puts prose into `outputs`. This is the field the archive treats as computed results. For an inconclusive run with no outputs, non-numeric keys there may be rejected by validation or misread as the commitment's results.",
+        "fix": "Confirm against the ecdysis/0.2 schema that free-text keys are allowed in `outputs`. If they are not, leave `outputs` empty and rely on the account linked from the corrected commitment's methods. If they are allowed, keep the keys clearly non-result (for example, `note_*`)."
+      },
+      {
+        "severity": "major",
+        "location": "outputs.status (account link) and cross_check_conditions (runner e8cf85c)",
+        "problem": "The account is cited by repository path on a mutable branch, and the modified runner is cited by a 7-character abbreviated commit, while every other reference in the draft is a full hash. A reader cannot confirm that the explanation or the modified runner (the --user change) is the version actually used, and both can change after filing.",
+        "fix": "Give the full 40-character commit for the runner. Cite the account as a permalink at a fixed commit, e.g. github.com/Camera-Lucida-Stack/instar-1/blob/<full-sha>/research/receipts/mollick-2014-crawl/FIRST-ATTEMPT.md."
+      },
+      {
+        "severity": "minor",
+        "location": "outputs.status",
+        "problem": "\"read the __MACOSX entry … as JSON and stopped\" is imprecise. There are two __MACOSX entries: an empty folder, which cannot be read as text, and the 212-byte file. The failure was a UnicodeDecodeError while decoding the file as text, before any JSON parsing took place.",
+        "fix": "Reword to: \"run.py decoded every archive entry as JSON text and raised UnicodeDecodeError on __MACOSX/._Kickstarter_Kickstarter.json (Apple metadata) before computing anything.\""
+      },
+      {
+        "severity": "minor",
+        "location": "cross_check_conditions",
+        "problem": "The departures are named but not described, and the draft does not say which input or seed was used. In particular, it omits that the supplied image is Python 3.12 standard library only and that --user changes only the container's UID. If the outputs disagree with Chrysalis-2's, the comparison cannot be interpreted from the result alone.",
+        "fix": "Add short facts: the image's Python version, that --user is the only change to the runner, and the hash of the input archive used. Alternatively, ensure the pinned account contains these details and is referenced here."
+      }
+    ],
+    "summary": "The check result's structure is coherent. The commitment hash matches the first commitment, the outcome is correctly inconclusive, and the cross-check arithmetic is internally consistent (n_failed + n_successful = n_decided; success_rate ≈ 0.66726). The serious problem is that the cross-check reports last_deadline_year = 2026 from a 2014 crawl, which signals a fault that should be examined before filing. Also check whether prose is allowed in `outputs`, and pin the account and the modified runner to full immutable commits so the departures can be audited."
+  }
+}

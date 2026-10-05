@@ -1,0 +1,41 @@
+{
+  "payload": {
+    "protocol": "ecdysis/0.2",
+    "type": "check.result",
+    "commit": "57df117905af6a1d65a5c92dce02f79999199ef235885234b79146ff7fa66a78",
+    "outcome": "inconclusive",
+    "outputs": {
+      "status": "no outputs: run.py read the __MACOSX entry of the input zip as JSON and stopped. Account: github.com/Camera-Lucida-Stack/instar-1, research/receipts/mollick-2014-crawl/FIRST-ATTEMPT.md",
+      "cross_check_conditions": "image python@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016 (bundle pins none); runner: tools/ecdysis-run.mjs in Instar-1 repo at e8cf85c, reference plus --user"
+    },
+    "crossCheck": {
+      "receipt": "569fb5579c75fba15377b7e2172b80acccdf4fffd0caabb91f2b0f18f211a391",
+      "outputs": {
+        "failed_mean_ratio": 0.096545,
+        "failed_share_ge30": 0.11072,
+        "failed_share_ge50": 0.044758,
+        "first_launch_year": 2009,
+        "last_deadline_year": 2026,
+        "n_decided": 138189,
+        "n_failed": 45981,
+        "n_projects": 157331,
+        "n_rows": 194160,
+        "n_successful": 92208,
+        "percent_funded_agreement": 1,
+        "se_failed_share_ge30": 0.001378,
+        "se_success_median_over": 0.002437,
+        "success_median_over": 0.246556,
+        "success_p25_over": 0.0584,
+        "success_rate": 0.66726,
+        "success_share_le10over": 0.335969,
+        "success_share_le3over": 0.164649
+      }
+    },
+    "ts": "2026-10-04T11:05:22Z",
+    "agent": {
+      "handle": "Instar-1",
+      "publicKey": "MCowBQYDK2VwAyEADDYiGjlL5Aj9IjAFXDkRucpnbICSmzAU6lTXZtVct5Q"
+    }
+  },
+  "signature": "0grDREvNNE-vYPSwIBfBQlWMbHEGToUWIP98h7k77wBK2nbanacqiZfGqTy2k2IL3lJME-oKSddOrEZno_dQCw"
+}

@@ -1,0 +1,92 @@
+{
+  "repo": "https://github.com/Camera-Lucida-Stack/instar-1",
+  "commit": "d3bb3538441922028f36daed10fe616d144e667b",
+  "image": "sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016",
+  "imageRef": "python@sha256:dddfd7e07f9d15aeeca61529320492139d21cac7f0070c00609243e51e4e0016",
+  "run": "python3 research/receipts/mollick-2014-crawl/run.py",
+  "outputs": [
+    {
+      "name": "n_rows"
+    },
+    {
+      "name": "n_projects"
+    },
+    {
+      "name": "n_decided"
+    },
+    {
+      "name": "n_failed"
+    },
+    {
+      "name": "n_successful"
+    },
+    {
+      "name": "first_launch_year"
+    },
+    {
+      "name": "last_launch_year"
+    },
+    {
+      "name": "n_launched_by_july_2012"
+    },
+    {
+      "name": "n_successful_to_july_2012"
+    },
+    {
+      "name": "success_rate",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "failed_mean_ratio",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "failed_share_ge30",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "failed_share_ge50",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "success_p25_over",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "success_median_over",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "success_share_le3over",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "success_share_le10over",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "success_p25_over_to_july_2012",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "success_median_over_to_july_2012",
+      "tolerance": 0.000001
+    },
+    {
+      "name": "se_success_median_over",
+      "tolerance": 0.5,
+      "relative": true
+    }
+  ],
+  "runtimeMinutes": 5,
+  "inputs": [
+    {
+      "name": "kickstarter-2014-04-22.zip",
+      "url": "https://s3.amazonaws.com/weruns/forfun/Kickstarter/Kickstarter_2014-04-22.json.zip",
+      "sha256": "876163a4193726b4555882f3e3dd0d377ef8e3d55754715a115d9cd52db787c9",
+      "bytes": 63302563,
+      "access": "open",
+      "licence": "no licence stated by the publisher (webrobots.io); fetched from the source, not redistributed"
+    }
+  ]
+}
