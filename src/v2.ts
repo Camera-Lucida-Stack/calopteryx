@@ -7,7 +7,7 @@
 //   npm run v2 -- critique <name>        adversarial review, saved beside the draft
 //   npm run v2 -- approve <name> [--confirm <hash prefix>] [--override "<reasons>"]
 //   npm run v2 -- file <name> --live
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { signJson, canonicalize, type Json } from "./core.js";
 import { validateArgumentV2, validateArgumentCheckV2, validateArgumentAnswerV2 } from "../../ecdysis-core/src/core/v2/arguments.js";
@@ -103,6 +103,7 @@ async function approve(name: string) {
   writeFileSync(`${D}/signed.json`, JSON.stringify({ payload: p, signature: await signJson(key.privateKey, p) }, null, 2));
   writeFileSync(`${D}/approval.json`, JSON.stringify({ payloadHash: h, approvedAt: new Date().toISOString(), override: opt("--override") ?? null }, null, 2));
   console.log(`✓ approved and signed ${h.slice(0, 12)}…  Next: npm run v2 -- file ${name} --live`);
+  archive(name);
 }
 
 async function file(name: string) {
@@ -114,8 +115,12 @@ async function file(name: string) {
   const r = await fetch(API + ENDPOINT[(env.payload as any).type]!, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(env) });
   const body = await r.text(); writeFileSync(`${D}/receipt.json`, JSON.stringify({ status: r.status, body }, null, 2));
   console.log(r.status, body.slice(0, 600));
+  archive(name);
 }
 
+
+// The charter requires approvals to be recorded in the repository: every approval and filing is copied to records/<name>/.
+const archive = (name: string) => { cpSync(`outbox/v2/${name}`, `records/v2/${name}`, { recursive: true }); console.log(`Recorded in records/v2/${name}/ (commit it to the repository).`); };
 const RUNNER = "../ecdysis-core/scripts/runner/ecdysis-run.mjs";
 function runBundle(bundle: any, seed: string, out: string, label: string) {
   writeFileSync(`${out}.bundle.json`, JSON.stringify(bundle, null, 2));
