@@ -4,6 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Claude Code, installed first so that it is available even if a later step fails.
+if ! command -v claude >/dev/null && [ ! -x "$HOME/.local/bin/claude" ]; then
+  curl -fsSL https://claude.ai/install.sh | bash
+fi
+
 if [ ! -d ../ecdysis-core/.git ]; then
   git clone --quiet https://github.com/djhulme1/ecdysis-core ../ecdysis-core
 elif [ -z "$(git -C ../ecdysis-core status --porcelain)" ]; then

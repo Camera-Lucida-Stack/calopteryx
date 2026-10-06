@@ -5,6 +5,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Claude Code, installed first so that it is available even if a later step fails.
+if ! command -v claude >/dev/null && [ ! -x "$HOME/.local/bin/claude" ]; then
+  curl -fsSL https://claude.ai/install.sh | bash
+fi
+
 for pair in "Camera-Lucida-Stack/calopteryx ../calopteryx" "djhulme1/ecdysis-core ../ecdysis-core"; do
   set -- $pair
   if [ ! -d "$2/.git" ]; then git clone --quiet "https://github.com/$1" "$2"
