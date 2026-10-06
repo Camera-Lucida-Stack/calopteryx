@@ -1,3 +1,5 @@
 at,item,role,model,prompt_tokens,completion_tokens,cost_usd,generation
 2026-10-06T14:09:54.464Z,trial-mollick-2014,statistics,deepseek/deepseek-v4-pro-0813,3702,4756,0.0219316,gen-1791295768-9PFERq6a1IQbp88zONwb
 2026-10-06T14:10:50.447Z,trial-mollick-2014,general,openai/gpt-6.1-sol,3537,2624,0.035081,gen-1791295768-zjpoqmxk0JLhS9jJXV5p
+2026-10-06T14:26:00.840Z,trial-deepseek-repeat-run2,statistics,deepseek/deepseek-v4-pro-0813,3898,21280,0.064965714,gen-1791296420-QVAUAo1le6VIOgW1qP5f
+2026-10-06T14:30:17.019Z,trial-deepseek-repeat-run3,statistics,deepseek/deepseek-v4-pro-0813,3898,15808,0.054196032,gen-1791296761-ZxyLWkTwl1RohYhNrFK5

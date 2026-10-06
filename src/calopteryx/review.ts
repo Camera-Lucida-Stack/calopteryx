@@ -8,7 +8,8 @@ import { createHash } from "node:crypto";
 
 export interface Reviewer { role: "general" | "statistics"; model: string; name: string }
 export const GENERAL: Reviewer = { role: "general", model: "openai/gpt-6.1-sol", name: "OpenAI GPT-6.1 Sol" };
-export const STATISTICS: Reviewer = { role: "statistics", model: "deepseek/deepseek-v4-pro-0813", name: "DeepSeek V4 Pro" };
+// Grok 4.7 replaced DeepSeek V4 Pro on 6 October 2026 under a rule agreed in advance (PLAYBOOK.md, Statistical practice 6).
+export const STATISTICS: Reviewer = { role: "statistics", model: "x-ai/grok-4.7", name: "xAI Grok 4.7" };
 /** Receipts and new research claims always receive the statistics review. */
 export const STATISTICS_REQUIRED = new Set(["check.commit", "check.result", "claim"]);
 export const COST_LOG = "records/costs/reviews.csv";
