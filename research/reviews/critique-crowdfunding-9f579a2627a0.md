@@ -1,0 +1,47 @@
+# Adversarial critique
+
+Payload SHA-256: 9f579a2627a0bf490911bd15247a10cd8ff2a48f49f59b3f59f1e4707ba4a00a
+
+The arithmetic largely matches analysis.json: the sample sizes, odds ratios, CIs, the 16/18 and 18/18 year counts and 643,007 all check. The paper's interpretation, however, outruns its data. Its headline novelty, that successes now overshoot, coincides with launch years in which the scraped sample is heavily enriched for successes (about 72–75% versus about 50% in 2009–2013). Yet the abstract's limitation claims the bias lies in older projects, which the paper's own counts contradict, and offers a circular completeness metric while omitting the promised external benchmark. The per-scrape robustness statement is selective. It reports only the goal effect, drops 9 errored scrapes and a degenerate one from the denominator, and hides H1a and H4 failures. The cross-study comparison of the log-goal odds ratio may rest on a log-base mismatch. The staff-pick comparison ignores likely post-outcome assignment. The pre-registered heterogeneity tests, all highly significant, go unreported. C2's 'still cluster near goals' is contradicted by every year since 2020. A hard-coded quality check inflates the claim that all checks passed.
+
+**blocking** (abstract (limitations)): The abstract attributes the 55% success rate to 'over-representation of successful older projects'. The results show the opposite. In 2009–2013 the US sample is close to balanced: for example, 2013 has 17,847 successes and 18,511 failures, and 2009 has 566 and 604. From 2019 on, successes dominate: 2020 has 10,567 and 3,714 (about 74%), 2024 has 10,180 and 4,042 (about 72%), and 2026 has 6,364 and 2,105. The selection on success is therefore concentrated in recent launch years, exactly where the paper reports its headline change (overshooting successes). The stated limitation misdiagnoses the bias and hides that it threatens the main new finding.
+Suggested fix: Report success shares by launch year next to Kickstarter's published rates. Correct the limitation to say that recent years are the most selected. State explicitly that the rise in overshooting may partly reflect which successful projects stay visible to the scraper.
+
+**blocking** (title, C1, C2, abstract): The claim that 'successes now overshoot their goals' is presented as a real change on Kickstarter. The alternative of differential visibility is never addressed. Kickstarter has limited historical project visibility since 2015, the scrapes reach only 71–82% of the union per year after 2014, and failed projects appear under-sampled in recent years. Projects that remain discoverable are plausibly the highly funded ones. Nothing in the results separates a true shift from a selection artefact.
+Suggested fix: Use within-scrape comparisons restricted to projects launched shortly before each scrape, where truncation is minimal. Alternatively, reweight to Kickstarter's published counts by year and outcome. Until then, present the overshoot finding as conditional on the scraped sample and lower its confidence.
+
+**major** (abstract (per-scrape robustness)): '125 of 127 individual scrapes for the goal effect' leaves out important information. Nine scrapes, all 2014–2015 files, failed with 'Singular matrix' errors. One scrape (2022-11-17) returned null for every hypothesis except H2. At least one scrape (12 June 2015) could not be downloaded (Deviation 2). The pre-registration required every hypothesis to be re-estimated on every scrape. Results for the other hypotheses are left unreported: H1a fails in 5 scrapes and H4 in 2. Reporting only the goal effect selects the most favourable hypothesis.
+Suggested fix: Report per-scrape outcomes for all hypotheses, with the true denominator (137 files attempted, 9 errors, 1 degenerate). Diagnose and disclose the cause of the singular-matrix failures. Mention the unavailable scrape(s).
+
+**major** (abstract ('coverage was essentially complete' for 2009–2013)): The completeness claim rests on largest_single_scrape_share = 1.0. That is the share of the data's own union found in one scrape, so the measure is circular and cannot detect projects missing from every scrape. Deviation 3 committed to a benchmark against Kickstarter's published totals, but no result of that benchmark is reported anywhere.
+Suggested fix: Report the Deviation 3 benchmark, comparing distinct launched projects per year with Kickstarter's figures. Drop 'essentially complete' unless the benchmark supports it.
+
+**major** (C5): 'Weaker than Mollick's 0.23' assumes both odds ratios are per unit of the natural log of the goal. If Mollick used log10, the comparable figure from this paper is 0.553^ln(10) ≈ 0.26, which is close to 0.23. The paper gives no evidence that the transformations match.
+Suggested fix: Verify the log base and scaling in Mollick (2014) and convert before comparing. Otherwise remove the 'weaker' comparison.
+
+**major** (C7, H5): There are three problems. First, staff_pick is taken from each project's latest scrape, so it can be assigned or updated after a campaign succeeds; this is outcome-contaminated (reverse causation). Second, the paper itself concedes it may not match Mollick's home-page featuring. Third, the effect varies significantly across years (LR p ≈ 4e-14) and ranges from 13.6 to 43.5. Juxtaposing 19.55 with 20.47 invites a reading of quantitative agreement, and a confidence of 0.85 is too high.
+Suggested fix: Discuss timing of staff-pick assignment and measurement non-equivalence in the claim itself. Avoid implying numerical agreement, report the year range, and lower the confidence.
+
+**major** (C2): 'Successes still cluster near their goals' is stated as a current fact. In every launch year from 2020 to 2026 the H2 outcome is 'not replicated'. Medians are 1.84, 1.75, 1.66, 1.67, 2.06, 2.14 and 2.26, and in 2024–2026 more than half of successes at least doubled their goal. The pooled estimate mixes eras and averages over this.
+Suggested fix: Restrict 'still cluster' to the years where it holds. State that from 2020 the pre-registered pattern criterion fails, so successes no longer cluster near goal in the recent data.
+
+**major** (abstract, C5, C6 (H6)): Every pre-registered H6 heterogeneity test is highly significant: goal p ≈ 7e-80, duration p ≈ 2e-166, staff pick p ≈ 4e-14, and the share tests have p near 0. The duration odds ratio moves from about 0.99 in 2010–2012 to about 0.955 in 2019–2026. The paper reports only '18 of 18 years' direction counts and omits these change-over-time results.
+Suggested fix: Report the H6 tests and per-year trajectories, especially the strengthening duration effect, and qualify C6 accordingly.
+
+**major** (code: quality()): specification_sensitivity is hard-coded to passed=True, and it feeds all_passed=True, even though per-scrape results contain errors and 'not replicated' outcomes. The quality gate cannot fail on this check.
+Suggested fix: Compute the pass/fail status from the sensitivity and per-scrape outputs, or remove the check from the quality summary.
+
+**minor** (code: per_scrape()): Exceptions are silently converted to error strings. 'Singular matrix' across all 2014–2015 scrapes suggests a systematic data problem, such as missing category, staff_pick or deadline fields in old formats, or a constant regressor. That problem may also affect how those projects' records were merged in the main extract.
+Suggested fix: Investigate the failures, fix the parsing for the older format, and rerun.
+
+**minor** (C6): 'Consistent with Mollick's 0.99' is ambiguous. The CI [0.976, 0.978] excludes 0.99, and recent years are around 0.955. Under the pre-registered directional rule the result is a replication of direction only.
+Suggested fix: Say 'same direction as Mollick's 0.99' and note the difference in magnitude.
+
+**minor** (C1): Mollick reported 'about one in nine', which the paper renders as 11.1%, implying false precision. The pooled 29.2% is also compared with a 2009–2012 figure, although the paper's own 2009–2012 estimates (8.8%, 6.0%, 7.4%, 11.7%) are the like-for-like comparison.
+Suggested fix: Quote Mollick's wording and add the same-period estimates alongside the pooled figure.
+
+**minor** (data/sample): 14,208 deduplicated projects (2.2%) have launch year 1970, meaning missing or zero timestamps, and are silently dropped. Projects with goals of exactly US$1,000 are excluded from H1a. Neither is disclosed.
+Suggested fix: Disclose both exclusions and their counts.
+
+**minor** (C8 / Deviation 1): Deviation 1 defines video as a non-empty 'video' field, but the code reads a 'has_video' column whose construction (dedupe.py) is not supplied. The H7 model also adds year fixed effects that the main H3–H5 model lacks, which departs from 'adding an indicator to the regression for H3 to H5'.
+Suggested fix: Document how has_video is built. Either align the specification with the deviation text or record the change.

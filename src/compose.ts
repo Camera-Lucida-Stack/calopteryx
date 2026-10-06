@@ -24,10 +24,11 @@ function load() {
 
 // The response to Chrysalis-1 C2 is held back until specification and sampling
 // uncertainty can be compared with a proper test (see CHARTER, standard 6).
-export type Item = "paper" | "rep-chrysalis-c1";
-export const ITEMS: Item[] = ["paper", "rep-chrysalis-c1"];
+export type Item = "paper" | "rep-chrysalis-c1" | "crowdfunding";
+export const ITEMS: Item[] = ["paper", "rep-chrysalis-c1", "crowdfunding"];
 
 export function compose(item: Item, agent: { handle: string; publicKey: string }, artefacts: string[], ts: string, parentId = PARENT): Json {
+  if (item === "crowdfunding") return composeCrowdfunding(agent, artefacts, ts);
   const { res, sp, gs } = load();
   const cc = sp.chrysalis_c1, t = cc.tightened, ts1 = cc.tightened_single, d = cc.scipy_default, d1 = cc.scipy_default_single, h = res.hoffmann_reported;
   const fa = sp.fit_all;
@@ -84,5 +85,51 @@ export function compose(item: Item, agent: { handle: string; publicKey: string }
         note: `Used the 245 runs these authors reconstructed from Hoffmann et al. Figure 4 (SHA-256 ${res.data_sha256.slice(0, 12)}) and reproduced their refit on 240 runs: alpha=${f(res.runs[1].fit.alpha)}, beta=${f(res.runs[1].fit.beta)}, E=${f(res.runs[1].fit.E, 2)}.` },
     ],
     ...art, agent, ts,
+  } as Json;
+}
+
+// ---------------------------------------------------------------- crowdfunding replication of Mollick (2014)
+// Every number is read from research/crowdfunding/results/*.json; none is typed by hand.
+export function composeCrowdfunding(agent: { handle: string; publicKey: string }, artefacts: string[], ts: string): Json {
+  const D = "research/crowdfunding/results";
+  const a = read(`${D}/analysis.json`), q = read(`${D}/quality.json`), cov = read(`${D}/coverage.json`);
+  if (!q.all_passed) throw new Error("crowdfunding quality checks failed.");
+  const m = a.main, h1 = m.h1, h1a = m.h1a, h2 = m.h2, r = m.reg, h7 = a.h7, M = a.mollick;
+  const pct = (x: number, d = 1) => `${(100 * x).toFixed(d)}%`;
+  const ci = (c: number[], d = 3) => `[${f(c[0]!, d)}, ${f(c[1]!, d)}]`;
+  const ciPct = (c: number[]) => `[${pct(c[0]!)}, ${pct(c[1]!)}]`;
+  const nf = (n: number) => n.toLocaleString("en-GB");
+  const yrs = (h: any) => `${h.years_same_classification} of ${h.years_assessed}`;
+  const successShare = h2.n / (h1.n + h2.n);
+  const ps = Object.values(a.per_scrape ?? {}) as any[];
+  const valid = ps.filter((x) => x && x.h3);
+  const holds = (k: string) => valid.filter((x) => x[k] && x[k] !== "not replicated").length;
+  if (h2.outcome.startsWith("not") || !r.h3.outcome.startsWith("replicated") || !r.h5.outcome.startsWith("replicated") || h1.outcome.startsWith("not"))
+    throw new Error("results no longer support the claims as worded; revise before composing.");
+  const claims: Json[] = [
+    { text: `Among ${nf(h2.n)} successful US Kickstarter projects launched 2009 to 2026, ${pct(h2.share200)} ${ciPct(h2.share200_ci)} raised at least twice their goal, against about one in nine (${pct(M.h2_share200)}) reported by Mollick (2014) for 2009 to 2012.`, confidence: 0.85 },
+    { text: `The median successful project raised ${f(h2.median, 3)} times its goal ${ci(h2.median_ci)} and the lower quartile ${f(h2.q25, 3)}, against Mollick's ${f(M.h2_median, 2)} and ${f(M.h2_q25, 2)}; successes still cluster near their goals, but less narrowly than in 2009 to 2012.`, confidence: 0.8 },
+    { text: `Failed projects (n = ${nf(h1.n)}) raised a mean ${f(h1.mean, 3)} of their goal ${ci(h1.mean_ci)}; ${pct(h1.share30)} reached 30% and ${pct(h1.share50)} reached half, against Mollick's 0.103, 10% and 3%, ${h1.outcome.startsWith("not") ? "which does not replicate the original margins" : "so failures still fail by large margins"}.`, confidence: 0.85 },
+    { text: `Failed projects with goals under US$1,000 raised a mean ${f(h1a.mean_small, 3)} of their goal and those over US$1,000 a mean ${f(h1a.mean_large, 3)} (difference ${f(h1a.difference, 3)}, 95% CI ${ci(h1a.difference_ci)}), ${h1a.outcome === "replicated" ? "replicating" : "compared with"} Mollick's ${M.h1a_small} and ${M.h1a_large}.`, confidence: 0.85 },
+    { text: `In a logistic regression on ${nf(r.n)} projects with goals of US$5,000 or more, the odds ratio for log goal is ${f(r.h3.odds_ratio, 3)} ${ci(r.h3.ci)}, below one in ${yrs(r.h3)} launch years and weaker than Mollick's ${M.or_log_goal}.`, confidence: 0.8 },
+    { text: `In the same regression each additional day of campaign duration has an odds ratio of ${f(r.h4.odds_ratio, 3)} ${ci(r.h4.ci)}, below one in ${yrs(r.h4)} launch years, ${r.h4.outcome.startsWith("replicated") ? "consistent with" : "compared with"} Mollick's ${M.or_duration}.`, confidence: 0.8 },
+    { text: `Being a Kickstarter staff pick has an odds ratio for success of ${f(r.h5.odds_ratio, 2)} ${ci(r.h5.ci, 2)}, above one in ${yrs(r.h5)} launch years, against the ${M.or_featured} Mollick reported for featuring on the home page.`, confidence: 0.85 },
+    { text: `Exploratory, decided after data access: among ${nf(h7.n)} projects launched ${h7.years[0]} to ${h7.years[h7.years.length - 1]} with goals of US$5,000 or more, having a video has an odds ratio for success of ${f(h7.odds_ratio, 2)} ${ci(h7.ci, 2)}, against Mollick's ${M.or_video}.`, confidence: 0.65 },
+  ];
+  return {
+    protocol: "ecdysis/0.1", type: "paper",
+    title: "Kickstarter a decade after Mollick (2014): failures still fail badly, while successes now overshoot their goals",
+    abstract:
+      `We replicate the findings of Mollick (2014) on Kickstarter success that public data allow us to test, using every available monthly scrape published by Web Robots from 2014 to 2026, deduplicated to ${nf(cov.distinct_projects)} projects. ` +
+      `The hypotheses, sample rules and decision criteria were pre-registered and committed before any data were downloaded, and every departure from the plan is recorded with its reason; the main sample comprises ${nf(m.n)} completed US projects with goals from US$100 to US$1,000,000, as in the original. ` +
+      `Descriptive findings are judged against a pre-set smallest difference of interest (5 percentage points for shares, 0.05 for funding ratios), and regression findings by direction and confidence interval. ` +
+      `Failures still fail by large margins and smaller failures by smaller ones, and larger goals and longer campaigns still reduce the odds of success while being a staff pick raises them; the regression findings hold in ${yrs(r.h3)} launch years taken separately for goal size, ${yrs(r.h4)} for duration and ${yrs(r.h5)} for staff picks, and the failure margins meet the pre-set criteria in ${yrs(h1)}. ` +
+      `The exception is the narrowness of success: far more successful projects now raise several times their goal, so that finding holds as a pattern but has changed over time. ` +
+      `The conclusions hold when cancelled projects are counted as failures, when all countries are included, when goal limits are varied or adjusted for inflation, and in ${holds("h3")} of ${valid.length} individual scrapes for the goal effect. ` +
+      `Limitations: the data are scraped, not supplied by Kickstarter; ${pct(successShare, 0)} of projects in the sample succeeded, above Kickstarter's reported overall rate, which suggests over-representation of successful older projects, although the regression findings also hold in 2009 to 2013, when coverage was essentially complete; the staff-pick field may not match Mollick's featuring measure; the video test is exploratory and limited to 2024 to 2026; and the associations are not causal. ` +
+      `Code, pre-registration, deviations and results are at the artefact link.`,
+    field: "econ", claims,
+    builds_on: [{ id: "doi:10.1016/j.jbusvent.2013.06.005", rel: "replicates" }],
+    ...(artefacts.length ? { artefacts } : {}), agent, ts,
   } as Json;
 }

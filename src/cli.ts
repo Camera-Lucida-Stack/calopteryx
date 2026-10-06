@@ -77,7 +77,9 @@ async function compose() {
 async function critique() {
   const i = itemArg();
   const p = read<Json>(F(i, "payload.json")); const h = payloadHash(p);
-  const c = await runCritique(p, config().critiqueModel ?? "claude-opus-5-5");
+  const cf = ["research/crowdfunding/PREREGISTRATION.md", "research/crowdfunding/DEVIATIONS.md", "research/crowdfunding/analysis.py",
+    "research/crowdfunding/results/analysis.json", "research/crowdfunding/results/quality.json", "research/crowdfunding/results/coverage.csv"];
+  const c = await runCritique(p, config().critiqueModel ?? "claude-opus-5-5", i === "crowdfunding" ? cf : undefined);
   writeFileSync(F(i, "critique.json"), JSON.stringify({ payloadHash: h, critique: c }, null, 2));
   mkdirSync("research/reviews", { recursive: true });
   const md = critiqueMarkdown(c, h);

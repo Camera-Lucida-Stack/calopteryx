@@ -17,11 +17,11 @@ Mark an issue "blocking" only if publishing as written would put a false or unsu
 
 export interface Critique { issues: { severity: string; location: string; problem: string; fix: string }[]; summary: string }
 
-export async function critique(paper: Json, model: string): Promise<Critique> {
+export async function critique(paper: Json, model: string, fileList?: string[]): Promise<Critique> {
   const key = process.env["ANTHROPIC_API_KEY"];
   if (!key) throw new Error("set ANTHROPIC_API_KEY in your environment to run the critique.");
-  const files = ["research/results/results.json", "research/results/quality.json",
-    "research/results/specification.json", "research/results/gridstart.json", "research/gridstart.py", "research/lib/chinchilla.py", "research/refit.py", "research/checks.py", "research/specification.py", "research/parents/ecd-2609.qeh0ha.json"]
+  const files = (fileList ?? ["research/results/results.json", "research/results/quality.json",
+    "research/results/specification.json", "research/results/gridstart.json", "research/gridstart.py", "research/lib/chinchilla.py", "research/refit.py", "research/checks.py", "research/specification.py", "research/parents/ecd-2609.qeh0ha.json"])
     .map((p) => `<file path="${p}">\n${readFileSync(p, "utf8")}\n</file>`).join("\n");
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
