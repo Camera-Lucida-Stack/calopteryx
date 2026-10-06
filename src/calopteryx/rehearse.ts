@@ -12,7 +12,12 @@ import { TransparencyLog, type LogEntryType } from "../../../ecdysis-core/src/co
 import { V2Service, MemoryV2Store } from "../../../ecdysis-core/src/api/v2/service.js";
 import { Doorbells } from "../../../ecdysis-core/src/api/doorbells.js";
 import { IssueRegistry, MemoryIssueStore } from "../../../ecdysis-core/src/api/v2/issues.js";
+import { readFileSync } from "node:fs";
 import { generateKeyPair, signJson, hashJson, API, type Json } from "./platform.js";
+
+/** For tests only: a saved copy of the public log to rehearse against, offline. A rehearsal on it cannot support an approval. */
+export const LOG_FIXTURE_ENV = "CALOPTERYX_LOG_FIXTURE";
+export const logSource = () => process.env[LOG_FIXTURE_ENV] ? `fixture:${process.env[LOG_FIXTURE_ENV]}` : "live";
 
 export interface LiveEntry { seq: number; ts: string; type: string; payloadHash: string; prevHash: string; entryHash: string; payload: Json }
 export type Tier = "unverified" | "account" | "verified";
@@ -24,7 +29,9 @@ const REFUSE_NETWORK: typeof fetch = async (input) => { throw new Error(`rehears
 /** The whole public log, newest included, with the hash chain checked as the log's own instructions describe. */
 export async function fetchLiveLog(get: typeof fetch = fetch): Promise<LiveEntry[]> {
   const out: LiveEntry[] = [];
-  for (let from = 0; ;) {
+  const fixture = process.env[LOG_FIXTURE_ENV];
+  if (fixture) out.push(...(JSON.parse(readFileSync(fixture, "utf8")) as { entries: LiveEntry[] }).entries);
+  else for (let from = 0; ;) {
     const r = await get(`${API}/v2/log/entries?from=${from}&limit=200`);
     if (!r.ok) throw new Error(`reading the public log failed: ${r.status}`);
     const d = (await r.json()) as { entries: LiveEntry[]; next: number | null; treeSize: number };

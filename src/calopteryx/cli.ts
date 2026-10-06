@@ -25,7 +25,7 @@ import { spawnSync } from "node:child_process";
 import { canonicalize, hashJson, signJson, API, RUNNER, PROTOCOL, type Json } from "./platform.js";
 import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
-import { fetchLiveLog, privateCopy, signer, rehearseOne, type Tier } from "./rehearse.js";
+import { fetchLiveLog, privateCopy, signer, rehearseOne, logSource, type Tier } from "./rehearse.js";
 import { assess, disclosureProblem, AUDIT_LOG, type Relationship } from "./relationships.js";
 import { privateDetails } from "./privacy.js";
 import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
@@ -92,6 +92,7 @@ const GATES: Gate[] = [
     if (!existsSync(f)) return `rehearse it first: npm run cx -- rehearse ${n}`;
     const r = read<any>(f);
     if (r.payloadHash !== h) return `the item has changed since its rehearsal; rehearse it again: npm run cx -- rehearse ${n}`;
+    if (r.source !== "live" && r.source !== logSource()) return "it was rehearsed against a saved log, which cannot support an approval; rehearse it against the live record";
     if (r.held) return "the copy's screening held it for a human; reword it before going on";
     return r.accepted ? null : `the copy refused it (${r.status}): ${JSON.stringify(r.body).slice(0, 300)}`;
   } },
@@ -100,6 +101,7 @@ const GATES: Gate[] = [
     if (!existsSync(f)) return `review it first: npm run cx -- review ${n}`;
     const last = read<{ rounds: Round[] }>(f).rounds.at(-1)!;
     if (last.payloadHash !== h) return `the item has changed since its review; review it again with --round-reason`;
+    if (last.standIn && !STAND_IN()) return "the review was by the stand-in reviewer, used only in tests; review it with the real reviewers";
     for (const x of last.attachments) if (attachmentsOf([x.path])[0]!.sha256 !== x.sha256) return `the attachment ${x.path} has changed since the review`;
     const roles = last.reviews.map((r) => r.reviewer.role);
     if (!roles.includes("general")) return "the general review is missing";
@@ -134,7 +136,8 @@ function summary(name: string) {
 }
 
 // The reviews. One per item; a second round only when the first found something blocking, or with a recorded reason.
-type Round = { at: string; payloadHash: string | null; attachments: { path: string; sha256: string }[]; reason: string | null; reviews: Review[] };
+type Round = { at: string; payloadHash: string | null; attachments: { path: string; sha256: string }[]; reason: string | null; standIn?: boolean; reviews: Review[] };
+const STAND_IN = () => process.env["CALOPTERYX_REVIEWER"] === "standin";
 async function review(name: string) {
   const D = dir(name), f = `${D}/review.json`;
   const draft = read<Record<string, any>>(`${D}/draft.json`);
@@ -148,10 +151,10 @@ async function review(name: string) {
   }
   const att = attachmentsOf(Array.isArray(draft.attachments) ? draft.attachments : []);
   const who = [GENERAL, ...(STATISTICS_REQUIRED.has(p.type) || a.includes("--stats") ? [STATISTICS] : [])];
-  const call = process.env["CALOPTERYX_REVIEWER"] === "standin" ? standIn() : undefined;
+  const call = STAND_IN() ? standIn() : undefined;
   console.log(`Reviewing ${name} with ${who.map((r) => r.name).join(" and ")}${call ? " (stand-in reviewer: no cost)" : ""}…`);
   const reviews = await Promise.all(who.map((r) => runReview(r, p, String(draft.context ?? ""), att, { label: name, ...(call ? { call } : {}) })));
-  rounds.push({ at: new Date().toISOString(), payloadHash: role() === "none" ? null : sha(p as Json), attachments: att.map(({ path, sha256 }) => ({ path, sha256 })), reason, reviews });
+  rounds.push({ at: new Date().toISOString(), payloadHash: role() === "none" ? null : sha(p as Json), attachments: att.map(({ path, sha256 }) => ({ path, sha256 })), reason, standIn: !!call, reviews });
   writeFileSync(f, JSON.stringify({ rounds }, null, 2));
   const order = ["blocking", "major", "minor"];
   for (const r of reviews) {
@@ -168,7 +171,9 @@ async function rehearse(names: string[]) {
   if (!["unverified", "account", "verified"].includes(tier)) die("--tier: unverified, account or verified");
   const live = await fetchLiveLog();
   const copy = await privateCopy(live);
-  console.log(`Private copy of the live record made: ${copy.size} entries, every one matching the public log's hashes.`);
+  const source = logSource();
+  console.log(source === "live" ? `Private copy of the live record made: ${copy.size} entries, every one matching the public log's hashes.`
+    : `Private copy made from a SAVED log (${source}), for testing only: ${copy.size} entries. It cannot support an approval.`);
   const r = role();
   let key: { publicKey: string; privateKey: string; standIn: boolean } | null = null;
   for (const n of names) {
@@ -180,7 +185,7 @@ async function rehearse(names: string[]) {
     }
     let res!: Awaited<ReturnType<typeof rehearseOne>>;
     const { relationship } = await assess(copy, p, async () => (res = await rehearseOne(copy, k.endpoint, p, k.unsigned ? null : key)));
-    writeFileSync(`${dir(n)}/rehearsal.json`, JSON.stringify({ payloadHash: r === "none" ? null : sha(p as Json), liveEntries: copy.size,
+    writeFileSync(`${dir(n)}/rehearsal.json`, JSON.stringify({ payloadHash: r === "none" ? null : sha(p as Json), liveEntries: copy.size, source,
       standIn: key?.standIn ?? null, tier, at: new Date().toISOString(), ...res, relationship }, null, 2));
     console.log(`${res.accepted ? "✓" : "✗"} ${n} (${res.type}): ${res.held ? "202, held by screening" : res.status} ${JSON.stringify(res.body).slice(0, 400)}`);
     console.log(`  Dr Hulme's agents now: ${relationship.agents.join(", ") || "none"}. ${relationship.touches.length ? `Touches their work: ${relationship.touches.join("; ")}${relationship.changes.length ? `; in the copy, ${relationship.changes.join("; ")}` : ""}. The relationship must be disclosed.` : "Does not touch their work."}`);
@@ -211,7 +216,7 @@ async function approve(name: string) {
 }
 
 // Every filed item that touches work by Dr Hulme's agents is listed, so the pattern of that work can be audited.
-function auditRelationship(name: string, p: Record<string, any>, status: number) {
+export function auditRelationship(name: string, p: Record<string, any>, status: number) {
   const f = `outbox/${name}/rehearsal.json`;
   const rel = existsSync(f) ? read<{ relationship?: Relationship }>(f).relationship : undefined;
   if (!rel?.touches.length) return;

@@ -146,14 +146,43 @@ export const KINDS: Record<string, Kind> = {
   },
 };
 
+/** The fields each kind may carry, from the rules (protocol/skill-2026-10-06.md); any other is refused by name. */
+const FIELDS: Record<string, string[]> = {
+  claim: ["text", "kind", "confidence", "test", "field", "scope", "data", "rationale", "method", "artefacts", "caveats", "blockers", "builds_on", "models"],
+  "claim.external": ["source", "quote", "test", "work", "kind", "scope", "fidelity", "data"],
+  "claim.link": ["from", "to", "rel", "basis", "evidence", "models"],
+  "claim.unlink": ["link", "reason"],
+  "claim.amend": ["claim", "kind", "test", "scope", "fidelity", "data"],
+  "submission.withdraw": ["subject", "reason"],
+  "check.commit": ["target", "kind", "design", "bundle", "models", "methods", "holds"],
+  "check.result": ["commit", "outcome", "outputs", "crossCheck"],
+  "check.attempt": ["claim", "blocker", "read", "looked", "detail", "unblockedBy", "effortMinutes", "models"],
+  "attempt.clear": ["claim", "blocker", "how"],
+  review: ["claim", "forecast", "rationale", "models"],
+  "argument.file": ["claim", "stance", "grounds", "text", "cites", "instance", "confidence", "models"],
+  "argument.check": ["argument", "holds", "note", "models"],
+  "argument.answer": ["argument", "text"],
+  "issue.flag": ["subject", "kind", "detail"],
+  "key.delegate": ["key", "scope", "label"],
+  "key.revoke": ["key", "compromisedAt"],
+  "doorbell.set": ["kind", "cadence", "url"],
+  "doorbell.stop": [],
+  "agent.register": ["handle", "publicKey", "pairing", "constitution", "models"],
+};
+const ENVELOPE = ["protocol", "type", "agent", "ts"];
+
 /** Problems with a payload that every kind shares, then the kind's own. */
 export function problems(p: Record<string, any>): string[] {
-  const k = KINDS[p.type];
+  // A registration is plain JSON with no type field; it is recognised by its handle and public key.
+  const type = p.type ?? (typeof p.handle === "string" && typeof p.publicKey === "string" ? "agent.register" : undefined);
+  const k = KINDS[type];
   if (!k) return [`type: one of ${Object.keys(KINDS).join(", ")}`];
-  if (k.unsigned) return k.validate(p);
+  const allowed = new Set([...(FIELDS[type] ?? []), ...(k.unsigned ? [] : ENVELOPE)]);
+  const unknown = Object.keys(p).filter((f) => !allowed.has(f)).map((f) => `${f}: not a field of ${type} (it carries ${FIELDS[type]!.join(", ")})`);
+  if (k.unsigned) return [...unknown, ...k.validate(p)];
   const e: string[] = [];
   if (p.protocol !== PROTOCOL) e.push(`protocol: "${PROTOCOL}"`);
   if (!p.agent || typeof p.agent.handle !== "string" || typeof p.agent.publicKey !== "string") e.push("agent: {handle, publicKey}");
   if (typeof p.ts !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(p.ts)) e.push("ts: ISO-8601 UTC");
-  return [...new Set([...e, ...k.validate(p)])];
+  return [...new Set([...unknown, ...e, ...k.validate(p)])];
 }

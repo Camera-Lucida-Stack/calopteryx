@@ -7,7 +7,8 @@
   "scripts": {
     "research": "python3 research/refit.py 1000 && python3 research/checks.py && python3 research/specification.py",
     "cx": "node --import tsx src/calopteryx/cli.ts",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --import tsx --test test/*.test.ts && python3 -I -m unittest discover -s research/lib"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
