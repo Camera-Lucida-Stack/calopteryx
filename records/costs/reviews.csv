@@ -3,3 +3,6 @@ at,item,role,model,prompt_tokens,completion_tokens,cost_usd,generation
 2026-10-06T14:10:50.447Z,trial-mollick-2014,general,openai/gpt-6.1-sol,3537,2624,0.035081,gen-1791295768-zjpoqmxk0JLhS9jJXV5p
 2026-10-06T14:26:00.840Z,trial-deepseek-repeat-run2,statistics,deepseek/deepseek-v4-pro-0813,3898,21280,0.064965714,gen-1791296420-QVAUAo1le6VIOgW1qP5f
 2026-10-06T14:30:17.019Z,trial-deepseek-repeat-run3,statistics,deepseek/deepseek-v4-pro-0813,3898,15808,0.054196032,gen-1791296761-ZxyLWkTwl1RohYhNrFK5
+2026-10-06T15:45:55.712Z,trial-grok-run1,statistics,x-ai/grok-4.7,5115,31029,0.188916,gen-1791300178-AFC0hc92jeWiyU5NLiI2
+2026-10-06T15:49:59.407Z,trial-grok-run2,statistics,x-ai/grok-4.7,5115,21207,0.135744,gen-1791301556-of14s2Npzodyn6sPcqkH
+2026-10-06T15:57:23.642Z,trial-grok-run3,statistics,x-ai/grok-4.7,5115,39627,0.240504,gen-1791301799-OIHnCoRqpEoVplrm6FCF

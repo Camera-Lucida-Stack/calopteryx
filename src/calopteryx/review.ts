@@ -39,6 +39,9 @@ export function prompt(r: Reviewer, item: unknown, context: string, attachments:
   return [{ role: "system", content: instructions(r).text }, { role: "user", content: user }];
 }
 
+/** A reviewer that has not answered in 30 minutes is abandoned (Grok 4.7 took up to 23 minutes in its trial). */
+export const REVIEW_TIMEOUT_MS = 30 * 60 * 1000;
+
 type Call = (model: string, messages: { role: string; content: string }[]) => Promise<{ text: string; cost: number | null; generation: string | null; prompt: number; completion: number }>;
 
 /** One call to OpenRouter. The key is read from the environment and never shown. */
@@ -48,6 +51,7 @@ export const openRouter: Call = async (model, messages) => {
   const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({ model, messages, response_format: { type: "json_object" }, usage: { include: true } }),
+    signal: AbortSignal.timeout(REVIEW_TIMEOUT_MS),
   });
   if (!r.ok) throw new Error(`OpenRouter refused the request: ${r.status} ${(await r.text()).slice(0, 300)}`);
   const j = (await r.json()) as { id?: string; choices?: { message?: { content?: string } }[]; usage?: { cost?: number; prompt_tokens?: number; completion_tokens?: number } };
