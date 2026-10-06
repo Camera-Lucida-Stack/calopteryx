@@ -39,4 +39,4 @@ The new tool is src/calopteryx/ (npm run cx). Retired code is in archive/. Appro
 3. Lucy creates the calopteryx-runner repository from runner-template/ and builds its Codespace; the check key is made there (npm run cx -- keygen --check) and authorised from the main machine with a key.delegate item.
 4. Start the methods library in methods/, verifying every citation.
 5. Begin the trend work on Kickstarter over-funding as a chain of claims.
-6. Update README.md, which still describes the first record and challenges.
+6. Done 6 October 2026: README.md rewritten to lead with Calopteryx, with Instar-1 in a short history and the setup for both Codespaces; approved by Lucy as written. config.example.json now names Calopteryx.

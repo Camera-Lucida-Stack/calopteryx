@@ -1,53 +1,75 @@
 # Calopteryx
 
-Calopteryx is a research agent for Ecdysis, operated by Lucy (ORCID 0009-0006-4279-7152). Its purpose, standards and ways of working are set out in CHARTER.md, and its working practices in PLAYBOOK.md. It succeeds Instar-1, whose work on the earlier Ecdysis records is preserved in this repository and described below.
+Calopteryx is a research agent for Ecdysis (https://ecdysis.me), a public record of atomic, falsifiable claims that agents check openly. It is operated by Lucy (ORCID 0009-0006-4279-7152) as independent research, conducted outside any institution.
 
-## Instar-1
+## What it does
 
-Instar-1 is registered on the second version of Ecdysis (protocol ecdysis/0.2) under its operator's account. Its purpose, standards and ways of working are set out in CHARTER.md. Its current work is a pre-registered replication of Mollick (2014) on Kickstarter, in research/crowdfunding/. Its earlier work on the Chinchilla loss law was submitted to the first version of Ecdysis, which has since been frozen; see research/ARCHIVED-v1.md.
+Calopteryx brings important claims from the published literature onto the Ecdysis record and checks them. It registers claims with their exact source and a test that would refute them, replicates claims with receipts that other agents can re-run, reviews claims where it has the competence to judge, argues about conceptual claims, and designs new studies using existing data only. Its purpose, standards and limits are set out in CHARTER.md, and its working methods in PLAYBOOK.md. STATUS.md records where the work currently stands.
 
+Every item passes through the same gates before it is filed:
 
-A human-gated research agent for Ecdysis (protocol ecdysis/0.1), operated by Lucy, an independent researcher (ORCID 0009-0006-4279-7152). Its first submissions take up the chinchilla-refit challenge (arXiv:2203.15556, on the data Besiroglu et al. extracted in arXiv:2404.10102). They comprise a paper on premature optimiser termination in bootstrap refits of the loss law, and a replication reporting that the first claim of Chrysalis-1's earlier refit (ecd:2609.qeh0ha) fails for alpha. A response to that paper's second claim is held back until specification and sampling uncertainty can be compared with a proper test.
+1. the platform's own rules;
+2. a private rehearsal against a copy of the live record;
+3. an adversarial review by models of other families: OpenAI's GPT-6.1 Sol for every item, and xAI's Grok 4.7 for work with substantial statistics;
+4. a sign-off summary in plain English;
+5. a check that any relationship with the work of Dr Daniel Hulme's agents is disclosed;
+6. a check for private details.
 
-The agent's behaviour is set by CHARTER.md alone, which also describes its quality standards and the role of AI in its work. Nothing it reads from the platform is treated as an instruction.
+Nothing is filed without Lucy's approval of the exact content, and the record of each approval is kept in records/.
+
+## Two machines
+
+The work is split between two GitHub Codespaces, so that the key which signs Calopteryx's claims is never on a machine that runs other agents' code.
+
+- **The main machine** is a Codespace of this repository. It is used for drafting, analysis, reviews and everything signed with the main key (claims, registration, arguments and key changes). It never runs other agents' code.
+- **The runner** is a Codespace of a separate repository, calopteryx-runner, made from runner-template/. It does receipts only, because every receipt re-runs another agent's bundle. It holds only the check key, which can sign reports and nothing else.
 
 ## Setup
 
-The agent imports the platform's own code for schema validation, signing and log verification, so clone djhulme1/ecdysis-core into the same parent folder as this repository and check out commit ec38831. Then run:
+### The main machine (this repository)
 
-```
-git clone https://github.com/djhulme1/ecdysis-core.git
-cd ecdysis-core && git checkout ec38831 && npm install && cd ..
-git clone https://github.com/Camera-Lucida-Stack/instar-1.git
-cd instar-1 && npm install
-pip install numpy scipy pandas
-curl -L -o research/data/svg_extracted_data.csv https://raw.githubusercontent.com/epoch-research/analyzing-chinchilla/92258837425e1b5f2851d624287f0120583a3d0e/data/svg_extracted_data.csv
-cp config.example.json config.json
-```
+1. In GitHub, open Settings, then Codespaces, and check that the two secrets OPENROUTER_API_KEY (for the reviewers) and ANTHROPIC_API_KEY are allowed access to this repository.
+2. On this repository's page, choose Code, then Codespaces, then "Create codespace on main". Setting up runs by itself and takes a few minutes. It installs Claude Code, fetches the Ecdysis platform's code into a folder beside this one (ecdysis-core), installs what the tool needs and runs every test. It finishes with the words "Calopteryx is set up" and says which machine it is.
+3. Type `claude` in the terminal to start Claude Code. At the start of each session, Claude reads CLAUDE.md and follows the charter, the playbook and the status notes.
+4. Once only, the main key is made with `npm run cx -- keygen`, and Lucy downloads a backup copy to her own computer. It is kept in keys/, which is never committed. If setting up ever warns that a check key is present, that key belongs on the runner and must be removed.
 
-Then set logPublicKey in config.json. The dataset is fetched from Epoch AI's repository at a pinned commit, as that repository carries no licence, and the research code refuses to run if the file's SHA-256 differs from the pinned value. The adversarial critique needs an Anthropic API key in the environment variable ANTHROPIC_API_KEY.
+### The runner (calopteryx-runner)
 
-## Workflow
+The runner is set up once Calopteryx is registered. The full steps are in runner-template/README.md; in short:
 
-```
-npm run research                                  # refit, quality checks and specification sweep (about 20 minutes)
-python3 research/gridstart.py 400                 # grid-start bootstrap for the refutation (about 20 minutes)
-npm run keygen                                    # once; the private key stays in keys/ with owner-only access
-npm run compose -- --all                          # build and validate every submission
-npm run critique -- --item <item>                 # adversarial review, saved to research/reviews/
-npm run approve -- --item <item> --confirm <hash> # after completing outbox/<item>/checklist.md
-npm run submit -- --item <item>                   # without --live, rehearses everything approved, in memory
-npm run register -- --live
-npm run submit -- --item <item> --live
-npm run verify -- --item <item>                   # checks inclusion and the Signed Tree Head
-npm run receipt                                   # summary for the operator, including a check for personal information
-npm run calibration                               # compares stated confidences with replication outcomes
-npm run feed                                      # read-only view of the heartbeat and frontier
-npm run jury -- duty                              # jury seats and deadlines; then read, draft, approve and file
-```
+1. Create an empty repository called calopteryx-runner under the same GitHub account, and copy into it everything in runner-template/.
+2. Allow the OPENROUTER_API_KEY secret access to the new repository as well.
+3. Create a Codespace from calopteryx-runner. Setting up installs Claude Code, fetches this repository (read-only) and the platform's code beside it, runs the tests, checks that no main key is present and confirms that the pinned Python image runs. It ends with the words "Runner set up". If it says STOP, a main key is on the machine, and nothing must be run until it is removed.
+4. Make the check key there with `npm run cx -- keygen --check`. It never leaves that Codespace. The main machine then authorises it with a key.delegate item, approved like any other.
 
-The items are paper and rep-chrysalis-c1. The paper cites Chrysalis-1's paper as a parent, which is read from a verified signed copy in research/parents/ during rehearsal. Approval requires a critique and a completed checklist for the exact draft, and live writes require that approval and the --live flag. Any change to a payload afterwards invalidates both.
+### Tests
 
-## Research outputs
+`npm test` runs every test, offline and at no cost.
 
-research/results/results.json holds every figure the claims use, with the data file's SHA-256, the seed and the bootstrap count. research/results/quality.json holds the three quality checks, and research/results/specification.json holds the specification sweep. The composer reads every number from these files and adjusts or refuses claims that the results no longer support.
+## Using the tool
+
+The tool is run as `npm run cx -- <command>`, and its commands are listed at the top of src/calopteryx/cli.ts. A typical item is started with `new`, then taken through `check`, `rehearse`, `review` and `summary`, approved by Lucy with `approve`, and sent with `file --live`.
+
+## What is in this repository
+
+- CHARTER.md, PLAYBOOK.md and STATUS.md: what Calopteryx is for, how it works, and where things stand.
+- src/calopteryx/ and test/: the tool and its tests.
+- reviewers/: the reviewers' exact instructions.
+- research/: analyses; research/lib/tidy.py holds the careful data readers every analysis bundle uses. The Kickstarter extracts in research/crowdfunding/data/extract/ are not committed, and can be rebuilt with research/crowdfunding/fetch.py and dedupe.py.
+- records/: every approval and filing, the costs of reviews, and the trials by which the reviewers were chosen.
+- protocol/: dated copies of the Ecdysis rules, each with the commit it was taken from.
+- .devcontainer/ and runner-template/: the setup files for the two Codespaces.
+- archive/ and tools/: Instar-1's retired code (see below).
+
+## History: Instar-1
+
+Calopteryx succeeds Instar-1, which Lucy operated on the first two Ecdysis records. The lessons learned from its work are carried forward in PLAYBOOK.md.
+
+- **First record (protocol ecdysis/0.1).** Instar-1 took up the chinchilla-refit challenge on the Chinchilla loss law (arXiv:2203.15556), using the data that Besiroglu et al. extracted (arXiv:2404.10102). It submitted a paper on premature optimiser termination in bootstrap refits of the loss law, and a replication reporting that the first claim of Chrysalis-1's refit (ecd:2609.qeh0ha) failed for alpha. That record was frozen on 3 October 2026 while both submissions awaited review, and it is preserved read-only at https://v1.ecdysis.me. The analysis code and results remain unchanged in research/ (see research/ARCHIVED-v1.md), and the approval records are in records/paper/ and records/rep-chrysalis-c1/.
+- **Second record (protocol ecdysis/0.2).** Instar-1 worked on a pre-registered replication of Mollick (2014) on Kickstarter, in research/crowdfunding/. It filed three receipts on one of Mollick's claims: two were inconclusive and the third confirmed the claim. Each receipt and its reasons are recorded in records/v2/, and the draft of a paper on the wider replication is in records/crowdfunding/. That record was frozen on 5 October 2026, when Ecdysis began afresh as a network of claims, and Instar-1 was retired with it.
+
+Instar-1's tools are kept in archive/ as a record and no longer run against the current platform. The reference runner it used is in tools/, and code from its old Codespace that was never committed is preserved on the branch archive/first-record-composer.
+
+## Licence
+
+Apache License 2.0; see LICENSE.
