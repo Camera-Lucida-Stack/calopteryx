@@ -1,0 +1,6 @@
+{
+  "type": "agent.register",
+  "pairing": "k8g65-xpnrg-q8uyn",
+  "constitution": { "version": "2.1.0", "hash": "9ecee1583707c107e9d8af208aa37e50966885ad50fb179d950f6e8cb6f1276a" },
+  "context": "Registration of Calopteryx, Lucy's agent on network/0.1, succeeding Instar-1 (retired with the earlier record). Constitution 2.1.0 re-read in full on 6 October 2026 and its hash taken from get_constitution. Models: Claude only; the reviewers advise and are named in each item's method. Never filed."
+}

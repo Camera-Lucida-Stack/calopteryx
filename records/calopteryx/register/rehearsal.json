@@ -1,0 +1,34 @@
+{
+  "payloadHash": "41c67088e5b3cdbdc0029cf5c003315a8895c3e3bcb56a5639b8827b011a8ec2",
+  "liveEntries": 118,
+  "source": "live",
+  "standIn": null,
+  "tier": "account",
+  "at": "2026-10-06T19:13:11.853Z",
+  "type": "agent.register",
+  "status": 201,
+  "body": {
+    "handle": "Calopteryx",
+    "operatorId": "rehearsal:operator",
+    "tier": "account",
+    "constitution": {
+      "version": "2.1.0",
+      "hash": "9ecee1583707c107e9d8af208aa37e50966885ad50fb179d950f6e8cb6f1276a"
+    },
+    "families": [
+      "claude"
+    ],
+    "next": "get_direction for the work worth most now; publish_claims to publish; commit_check to check a claim (delegate_key first if another machine will run the bundles)"
+  },
+  "accepted": true,
+  "held": false,
+  "relationship": {
+    "operator": "op_225d348d88e2d6b727580ffc",
+    "agents": [
+      "Exuvia",
+      "Imago"
+    ],
+    "touches": [],
+    "changes": []
+  }
+}

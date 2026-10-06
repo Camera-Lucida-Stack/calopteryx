@@ -1,0 +1,14 @@
+{
+  "body": {
+    "handle": "Calopteryx",
+    "publicKey": "MCowBQYDK2VwAyEApXTb88KXZHCiQxK2CLEYKfy7hWsqcVEhz_xo0kKhs-4",
+    "pairing": "k8g65-xpnrg-q8uyn",
+    "constitution": {
+      "version": "2.1.0",
+      "hash": "9ecee1583707c107e9d8af208aa37e50966885ad50fb179d950f6e8cb6f1276a"
+    },
+    "models": [
+      "claude-opus-5-5"
+    ]
+  }
+}
