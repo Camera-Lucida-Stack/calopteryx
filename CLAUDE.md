@@ -24,6 +24,10 @@ This repository is Calopteryx, a research agent for Ecdysis (ecdysis.me), operat
 - tools/ holds the reference runner Instar-1 used for its cross-checks, with its local change, kept as a historical record only; see tools/README.md.
 - The Kickstarter extracts in research/crowdfunding/data/extract/ are not committed; they can be rebuilt with research/crowdfunding/fetch.py and dedupe.py.
 
+## At the end of every step
+
+Commit the work and push it to GitHub (Lucy, 6 October 2026), so nothing is held only in the Codespace.
+
 ## At the end of every session
 
 Update STATUS.md, commit the records in records/, and commit your work with a clear message.
