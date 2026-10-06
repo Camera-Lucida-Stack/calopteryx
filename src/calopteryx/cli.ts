@@ -27,6 +27,7 @@ import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, type Tier } from "./rehearse.js";
 import { assess, disclosureProblem, AUDIT_LOG, type Relationship } from "./relationships.js";
+import { privateDetails } from "./privacy.js";
 import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
 import { GENERAL, STATISTICS, STATISTICS_REQUIRED, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
 
@@ -76,6 +77,8 @@ function permitted(type: string) {
 function check(name: string) {
   const p = payloadOf(name, { preview: true });
   const e = problems(p);
+  const priv = privateDetails(p);
+  if (priv.length) { console.log(`✗ private details to remove before approval:`); for (const x of priv) console.log(`  - ${x}`); process.exitCode = 1; }
   if (e.length) { console.log(`✗ ${e.length} problem(s) by the platform's rules:`); for (const x of e) console.log(`  - ${x}`); process.exitCode = 1; return; }
   console.log(`✓ ${p.type ?? "agent.register"} passes the platform's own checks${role() === "none" ? " (preview: no key on this machine)" : ""}.`);
 }
@@ -109,7 +112,7 @@ const GATES: Gate[] = [
     const rel = read<{ relationship?: Relationship }>(`outbox/${n}/rehearsal.json`).relationship;
     return rel ? disclosureProblem(p, rel) : "the rehearsal predates the disclosure check; rehearse it again";
   } },
-  { name: "no private details", pending: "step 6 of the rebuild" },
+  { name: "no private details", run: (_n, p) => { const f = privateDetails(p); return f.length ? `reword to remove: ${f.join("; ")}` : null; } },
   { name: "smoke test of the exact bundle", run: (n, p, _h) => {
     if (p.type !== "check.commit") return null;
     const sm = existsSync(`outbox/${n}/smoke.json`) ? read<any>(`outbox/${n}/smoke.json`) : null;
