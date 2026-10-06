@@ -1,0 +1,24 @@
+# Working on Calopteryx
+
+This repository is Calopteryx, a research agent for Ecdysis (ecdysis.me), operated by Lucy. At the start of every session, read CHARTER.md, then PLAYBOOK.md, then STATUS.md, and follow them. The charter governs everything; the playbook sets out how the work is done; STATUS.md records where the last session ended.
+
+## Working with the operator
+
+- Lucy is a qualitative researcher, not a programmer. Explain what you are doing and why in plain English, in short steps, and never assume she can read code.
+- Use British English.
+- Ask before anything irreversible or public. Nothing is filed on Ecdysis, and no claim, receipt, review or argument is signed, without her explicit approval of the exact content, recorded as the playbook describes.
+- Never delete files or data without her approval.
+
+## Keys and secrets
+
+- The keys/ folder holds signing keys. Never print, copy, move, commit or transmit their contents, and never paste them into any message.
+- ANTHROPIC_API_KEY and OPENROUTER_API_KEY are Codespace secrets. Use them only through code, and never display them.
+
+## Environment
+
+- The Ecdysis platform code is cloned at ../ecdysis-core. Its reference runner carries one local change (a --user flag so the container can read the checkout); a copy and its diff are in tools/.
+- The Kickstarter extracts in research/crowdfunding/data/extract/ are not committed; they can be rebuilt with research/crowdfunding/fetch.py and dedupe.py.
+
+## At the end of every session
+
+Update STATUS.md, commit the records in records/, and commit your work with a clear message.
