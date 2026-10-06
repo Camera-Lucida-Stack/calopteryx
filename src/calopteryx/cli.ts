@@ -9,6 +9,7 @@
 //                                               try the items, in order, against a private copy of the live record
 //   npm run cx -- review <name> [--stats] [--round-reason "<why>"]
 //                                               the reviews (general always; statistics for receipts, new claims, or on request)
+//   npm run cx -- summary <name> [--replace]    the sign-off summary for Lucy, with its parts to be written marked
 //   npm run cx -- costs [YYYY-MM]               spending on reviews, by month
 //   npm run cx -- approve <name> [--confirm <hash prefix>] [--override "<reasons>"]
 //   npm run cx -- file <name> --live            send an approved item
@@ -25,6 +26,7 @@ import { canonicalize, hashJson, signJson, API, RUNNER, PROTOCOL, type Json } fr
 import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, type Tier } from "./rehearse.js";
+import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
 import { GENERAL, STATISTICS, STATISTICS_REQUIRED, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
 
 export const HANDLE = "Calopteryx";
@@ -101,7 +103,7 @@ const GATES: Gate[] = [
     const blocking = last.reviews.flatMap((r) => r.issues.filter((i) => i.severity === "blocking"));
     return blocking.length && !opt("--override") ? `${blocking.length} blocking issue(s) remain; revise and review once more, or approve with --override "<Lucy's reasons>"` : null;
   } },
-  { name: "sign-off summary for Lucy", pending: "step 4 of the rebuild" },
+  { name: "the sign-off summary", run: (n, _p, h) => signoffProblem(`outbox/${n}`, h, latestReviews(n)) },
   { name: "deciding checks on Dr Hulme's agents' work flagged to Lucy", pending: "step 5 of the rebuild" },
   { name: "no private details", pending: "step 6 of the rebuild" },
   { name: "smoke test of the exact bundle", run: (n, p, _h) => {
@@ -110,6 +112,18 @@ const GATES: Gate[] = [
     return sm?.ok && sm.bundleHash === sha(p.bundle) ? null : `run a passing smoke test on this exact bundle first: npm run cx -- smoke ${n}`;
   } },
 ];
+
+const latestReviews = (n: string): Review[] => existsSync(`outbox/${n}/review.json`) ? read<{ rounds: Round[] }>(`outbox/${n}/review.json`).rounds.at(-1)!.reviews : [];
+
+// The sign-off summary, written from the latest review. Never overwrites a summary already being written, unless asked.
+function summary(name: string) {
+  const D = dir(name), f = `${D}/${SIGNOFF}`;
+  if (!existsSync(`${D}/review.json`)) die("review it first: the summary answers the reviews.");
+  if (existsSync(f) && !a.includes("--replace")) die(`${f} already exists; add --replace to start it again (its written parts would be lost).`);
+  const p = payloadOf(name, { preview: role() === "none" });
+  writeFileSync(f, skeleton(name, p, sha(p as Json), latestReviews(name)));
+  console.log(`Summary started in ${f}: write every part marked WRITE, including a response to each blocking and major point.`);
+}
 
 // The reviews. One per item; a second round only when the first found something blocking, or with a recorded reason.
 type Round = { at: string; payloadHash: string | null; attachments: { path: string; sha256: string }[]; reason: string | null; reviews: Review[] };
@@ -171,6 +185,7 @@ async function approve(name: string) {
   if (pending.length) die(`not yet possible: ${pending.map((g) => `${g.name} (${g.pending})`).join("; ")}.`);
   for (const g of GATES) { const r = g.run?.(name, p, h); if (r) die(`${g.name}: ${r}`); }
   if (opt("--confirm") !== h.slice(0, 12)) {
+    console.log(`Read the sign-off summary first: ${dir(name)}/${SIGNOFF}\n`);
     console.log(JSON.stringify(p, null, 2));
     console.log(`\nTo approve exactly this: npm run cx -- approve ${name} --confirm ${h.slice(0, 12)}`);
     return;
@@ -178,7 +193,7 @@ async function approve(name: string) {
   const k = KINDS[p.type ?? "agent.register"]!;
   const signature = k.unsigned ? null : await signJson(signingKey().privateKey, p as Json);
   writeFileSync(`${D}/signed.json`, JSON.stringify(k.unsigned ? { body: p } : { payload: p, signature }, null, 2));
-  writeFileSync(`${D}/approval.json`, JSON.stringify({ payloadHash: h, approvedAt: new Date().toISOString(), by: "Lucy", override: opt("--override") ?? null }, null, 2));
+  writeFileSync(`${D}/approval.json`, JSON.stringify({ payloadHash: h, approvedAt: new Date().toISOString(), by: "Lucy", summarySha256: summaryHash(D), override: opt("--override") ?? null }, null, 2));
   console.log(`✓ approved and signed ${h.slice(0, 12)}…`);
   if (p.type === "claim") console.log(`  This claim's id will be ecd:${(await hashJson({ p, s: signature } as Json)).slice(0, 16)}`);
   console.log(`  Next, only on Lucy's instruction to send: npm run cx -- file ${name} --live`);
@@ -262,7 +277,7 @@ const COMMANDS: Record<string, () => unknown> = {
   types: () => console.log(Object.keys(KINDS).join("\n")),
   new: () => { const t = kind && KINDS[kind] ? kind : die(`type: one of ${Object.keys(KINDS).join(", ")}`); const f = `${dir(need())}/draft.json`;
     if (existsSync(f)) die("a draft of that name already exists"); writeFileSync(f, JSON.stringify({ ...KINDS[t]!.template, context: "notes for the reviewers and for Lucy; never filed" }, null, 2)); console.log(`Draft template written to ${f}`); },
-  check: () => check(need()), review: () => review(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
+  check: () => check(need()), review: () => review(need()), summary: () => summary(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
   smoke: () => smoke(need()), run: () => run(need()), heartbeat,
   keygen: async () => console.log(`Main key generated in keys/ (never printed). Public key: ${await keygen()}`),
 };
