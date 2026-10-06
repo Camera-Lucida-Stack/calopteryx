@@ -10,6 +10,8 @@
 //   npm run cx -- review <name> [--stats] [--round-reason "<why>"]
 //                                               the reviews (general always; statistics for receipts, new claims, or on request)
 //   npm run cx -- summary <name> [--replace]    the sign-off summary for Lucy, with its parts to be written marked
+//   npm run cx -- decide <name> --proceed|--decline --reason "<Lucy's words>"
+//                                               record Lucy's decision on an item that stops under the rule on Dr Hulme's agents
 //   npm run cx -- costs [YYYY-MM]               spending on reviews, by month
 //   npm run cx -- approve <name> [--confirm <hash prefix>] [--override "<reasons>"]
 //   npm run cx -- file <name> --live            send an approved item
@@ -26,6 +28,7 @@ import { canonicalize, hashJson, signJson, API, RUNNER, PROTOCOL, type Json } fr
 import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, type Tier } from "./rehearse.js";
+import { assess, type Relationship } from "./relationships.js";
 import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
 import { GENERAL, STATISTICS, STATISTICS_REQUIRED, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
 
@@ -104,7 +107,16 @@ const GATES: Gate[] = [
     return blocking.length && !opt("--override") ? `${blocking.length} blocking issue(s) remain; revise and review once more, or approve with --override "<Lucy's reasons>"` : null;
   } },
   { name: "the sign-off summary", run: (n, _p, h) => signoffProblem(`outbox/${n}`, h, latestReviews(n)) },
-  { name: "deciding checks on Dr Hulme's agents' work flagged to Lucy", pending: "step 5 of the rebuild" },
+  { name: "the rule on Dr Hulme's agents", run: (n, _p, h) => {
+    const rel = read<{ relationship?: Relationship }>(`outbox/${n}/rehearsal.json`).relationship;
+    if (!rel) return "the rehearsal predates the rule; rehearse it again";
+    if (!rel.stop) return null;
+    const f = `outbox/${n}/hulme-decision.json`;
+    if (!existsSync(f)) return `this item stops for Lucy's decision (${rel.why}); record it with npm run cx -- decide ${n}`;
+    const d = read<{ payloadHash: string; decision: string }>(f);
+    if (d.payloadHash !== h) return "Lucy's decision was for a different version of the item; ask her again";
+    return d.decision === "proceed" ? null : "Lucy decided that this item does not proceed";
+  } },
   { name: "no private details", pending: "step 6 of the rebuild" },
   { name: "smoke test of the exact bundle", run: (n, p, _h) => {
     if (p.type !== "check.commit") return null;
@@ -113,15 +125,29 @@ const GATES: Gate[] = [
   } },
 ];
 
+// Lucy's decision on an item that stops under the rule on Dr Hulme's agents, in her words, recorded in records/.
+function decide(name: string) {
+  const D = dir(name), f = `${D}/rehearsal.json`;
+  const rel = existsSync(f) ? read<{ relationship?: Relationship }>(f).relationship : undefined;
+  if (!rel?.stop) die("this item does not stop under the rule on Dr Hulme's agents; there is nothing to decide.");
+  const decision = a.includes("--proceed") ? "proceed" : a.includes("--decline") ? "decline" : die("--proceed or --decline");
+  const reason = opt("--reason") ?? die('--reason "<Lucy\'s words>"');
+  const p = payloadOf(name);
+  writeFileSync(`${D}/hulme-decision.json`, JSON.stringify({ payloadHash: sha(p as Json), decision, reason, by: "Lucy", at: new Date().toISOString(), relationship: rel }, null, 2));
+  console.log(`Recorded: Lucy decided that ${name} ${decision === "proceed" ? "may proceed" : "does not proceed"}.`);
+  record(name);
+}
+
 const latestReviews = (n: string): Review[] => existsSync(`outbox/${n}/review.json`) ? read<{ rounds: Round[] }>(`outbox/${n}/review.json`).rounds.at(-1)!.reviews : [];
 
 // The sign-off summary, written from the latest review. Never overwrites a summary already being written, unless asked.
 function summary(name: string) {
   const D = dir(name), f = `${D}/${SIGNOFF}`;
   if (!existsSync(`${D}/review.json`)) die("review it first: the summary answers the reviews.");
+  if (!existsSync(`${D}/rehearsal.json`)) die("rehearse it first: the summary reports what the rehearsal found.");
   if (existsSync(f) && !a.includes("--replace")) die(`${f} already exists; add --replace to start it again (its written parts would be lost).`);
   const p = payloadOf(name, { preview: role() === "none" });
-  writeFileSync(f, skeleton(name, p, sha(p as Json), latestReviews(name)));
+  writeFileSync(f, skeleton(name, p, sha(p as Json), latestReviews(name), read<{ relationship?: Relationship }>(`${D}/rehearsal.json`).relationship ?? null));
   console.log(`Summary started in ${f}: write every part marked WRITE, including a response to each blocking and major point.`);
 }
 
@@ -170,10 +196,12 @@ async function rehearse(names: string[]) {
       key = await signer(copy, HANDLE, MODELS, tier, signingKey);
       console.log(key.standIn ? `Calopteryx is not on the live record yet, so a stand-in was registered in the copy (tier: ${tier}); claim ids signed here will differ from the real ones.` : "Signed with Calopteryx's real key, in memory only.");
     }
-    const res = await rehearseOne(copy, k.endpoint, p, k.unsigned ? null : key);
+    let res!: Awaited<ReturnType<typeof rehearseOne>>;
+    const { relationship } = await assess(copy, p, async () => (res = await rehearseOne(copy, k.endpoint, p, k.unsigned ? null : key)));
     writeFileSync(`${dir(n)}/rehearsal.json`, JSON.stringify({ payloadHash: r === "none" ? null : sha(p as Json), liveEntries: copy.size,
-      standIn: key?.standIn ?? null, tier, at: new Date().toISOString(), ...res }, null, 2));
+      standIn: key?.standIn ?? null, tier, at: new Date().toISOString(), ...res, relationship }, null, 2));
     console.log(`${res.accepted ? "✓" : "✗"} ${n} (${res.type}): ${res.held ? "202, held by screening" : res.status} ${JSON.stringify(res.body).slice(0, 400)}`);
+    console.log(`  Dr Hulme's agents now: ${relationship.agents.join(", ") || "none"}. ${relationship.touches.length ? `Touches their work: ${relationship.touches.join("; ")}.` : "Does not touch their work."}${relationship.stop ? ` STOPS for Lucy's decision: ${relationship.why}${relationship.changes.length ? ` (${relationship.changes.join("; ")})` : ""}.` : ""}`);
     if (!res.accepted) { process.exitCode = 1; break; }
   }
   if (r === "none") console.log("(Preview only: this machine holds no key, so these rehearsals cannot count towards an approval.)");
@@ -277,7 +305,7 @@ const COMMANDS: Record<string, () => unknown> = {
   types: () => console.log(Object.keys(KINDS).join("\n")),
   new: () => { const t = kind && KINDS[kind] ? kind : die(`type: one of ${Object.keys(KINDS).join(", ")}`); const f = `${dir(need())}/draft.json`;
     if (existsSync(f)) die("a draft of that name already exists"); writeFileSync(f, JSON.stringify({ ...KINDS[t]!.template, context: "notes for the reviewers and for Lucy; never filed" }, null, 2)); console.log(`Draft template written to ${f}`); },
-  check: () => check(need()), review: () => review(need()), summary: () => summary(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
+  check: () => check(need()), review: () => review(need()), summary: () => summary(need()), decide: () => decide(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
   smoke: () => smoke(need()), run: () => run(need()), heartbeat,
   keygen: async () => console.log(`Main key generated in keys/ (never printed). Public key: ${await keygen()}`),
 };

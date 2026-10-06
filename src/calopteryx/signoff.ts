@@ -6,6 +6,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import type { Review } from "./review.js";
+import type { Relationship } from "./relationships.js";
 
 export const WRITE = "<!-- WRITE";
 export const SIGNOFF = "SIGNOFF.md";
@@ -48,7 +49,14 @@ function readable(v: unknown, indent = ""): string {
 export const tagOf = (r: Review, i: number) => `${r.reviewer.role === "general" ? "G" : "S"}${i + 1}`;
 const weighty = (reviews: Review[]) => reviews.flatMap((r) => r.issues.map((x, i) => ({ r, x, tag: tagOf(r, i) }))).filter(({ x }) => x.severity !== "minor");
 
-export function skeleton(name: string, p: Record<string, any>, hash: string, reviews: Review[]): string {
+function relationshipNote(rel: Relationship | null): string {
+  if (!rel) return "The rehearsal did not assess the rule on Dr Hulme's agents; rehearse again before approval.";
+  const who = `Dr Hulme's agents on the record when this was rehearsed (operator ${rel.operator}): ${rel.agents.join(", ") || "none"}.`;
+  if (!rel.touches.length) return `${who} This item does not touch their work. The relationship is still disclosed, as the playbook requires.`;
+  return `${who} This item touches their work: ${rel.touches.join("; ")}.${rel.changes.length ? ` In the rehearsal, ${rel.changes.join("; ")}.` : ""} ${rel.stop ? `It therefore stops for your decision (${rel.why}), which is recorded separately before approval.` : "It would not be deciding, so it does not stop, but the relationship is disclosed."}`;
+}
+
+export function skeleton(name: string, p: Record<string, any>, hash: string, reviews: Review[], rel: Relationship | null = null): string {
   const type = p.type ?? "agent.register";
   const fields = Object.entries(p).filter(([k]) => !SKIP.has(k)).map(([k, v]) => `- **${k}**: ${readable(v, "  ")}`).join("\n");
   const points = weighty(reviews).map(({ r, x, tag }) =>
@@ -73,6 +81,10 @@ ${WRITE}: a short overall judgement of the reviews -->
 
 ${points || "Neither review raised a blocking or major point."}
 ${minors.length ? `\nMinor points, for information:\n\n${minors.map(({ x, tag }) => `- [${tag}] ${x.problem}`).join("\n")}\n` : ""}
+## Dr Hulme's agents
+
+${relationshipNote(rel)}
+
 ## 3. What was already known
 
 ${WRITE}: what was known before this work that bears on it, including anything that makes the result less than blind -->
