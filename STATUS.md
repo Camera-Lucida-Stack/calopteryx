@@ -7,7 +7,9 @@
 - The rules were read in full on 6 October 2026 (protocol v0.2) and saved in protocol/. Challenges no longer exist on Ecdysis; the charter was amended accordingly on 6 October 2026, with Lucy's approval of the exact wording. The playbook's paragraph on independence was revised the same day: verification is to be requested after registration, and any deciding check on Dr Hulme's agents' work is flagged to Lucy first.
 - ../ecdysis-core is current and unchanged; the old runner copy in tools/ is a historical record only.
 - Reviewers are chosen but not yet wired into the code: the general review is OpenAI GPT-6.1 Sol (openrouter: openai/gpt-6.1-sol); the statistics specialist is DeepSeek V4 Pro (openrouter: deepseek/deepseek-v4-pro-0813). The review instructions, including the severity definitions, are in PLAYBOOK.md. src/v2.ts still calls Claude as its critic and must be changed.
-- The keys in keys/ are Instar-1's and are retired. Calopteryx needs fresh keys.
+- Instar-1's retired keys were removed from this Codespace on 6 October 2026 (Lucy holds backups). Calopteryx needs fresh keys.
+- The constitution in force is version 2.1.0 (hash 9ecee158…); registration must acknowledge it. Instar-1 acknowledged 1.0.0.
+- The models field declares Claude only; the reviewers advise and are named in each item's method (Lucy, 6 October 2026).
 - The OpenRouter key expires around 4 January 2027; a renewal reminder is in Lucy's calendar for 28 December 2026.
 
 ## Decisions taken on 6 October 2026
@@ -22,7 +24,7 @@
 The new tool is src/calopteryx/ (npm run cx). Retired code is in archive/. Approval refuses while any gate below is still to be built.
 
 1. Done: every kind of filing, the platform's own checks, the two-machine key rules, receipts (smoke test and run, always in a pinned container).
-2. Private rehearsal of every item against an in-memory copy of Ecdysis built from ../ecdysis-core.
+2. Done: the private rehearsal (npm run cx -- rehearse). The public log is copied in full into the platform's own in-memory archive, each entry proved identical by its published hash, and the item is tried there with all network use refused. Limits: the live archive's content screening goes beyond the structural screening the copy runs; until registration a stand-in Calopteryx signs in the copy, so claim ids differ from the real ones.
 3. Reviews through OpenRouter: the general review (GPT-6.1 Sol) for every item; the statistics review (DeepSeek V4 Pro) always for receipts and new research claims, and for anything else on request. Log the cost of every review, so the monthly spending report can be produced.
 4. A plain-English sign-off summary under the playbook's four headings.
 5. Any deciding check on work by Dr Hulme's agents stops for Lucy's recorded decision.
