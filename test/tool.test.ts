@@ -181,6 +181,18 @@ test("end to end: every gate refuses in turn, then the approval is signed and re
   // The two-machine rule.
   const check = await generateKeyPair();
   assert.match(cx(["role"], { ...env, CALOPTERYX_CHECK_KEY: JSON.stringify(check) }).out, /both the main key and the check key/);
+  assert.match(cx(["keygen", "--check"]).out, /never beside the main key/);
+  const runner = mkdtempSync(join(tmpdir(), "runner-"));
+  symlinkSync(join(ROOT, "node_modules"), join(runner, "node_modules"));
+  const rx = (args: string[]) => { const r = spawnSync("node", ["--import", "tsx", join(ROOT, "src/calopteryx/cli.ts"), ...args], { cwd: runner, env, encoding: "utf8" }); return `${r.stdout}${r.stderr}`; };
+  assert.match(rx(["keygen", "--check"]), /Check key generated/);
+  assert.match(rx(["keygen", "--check"]), /never overwritten/);
+  assert.match(rx(["keygen"]), /main key is never generated where other agents' code runs/);
+  assert.match(rx(["role"]), /^runner machine/);
+  rx(["new", "c2", "claim"]);
+  assert.match(rx(["approve", "c2"]), /needs the main key, which is never on the runner machine/);
+  const inRepo = spawnSync("node", ["--import", "tsx", join(ROOT, "src/calopteryx/cli.ts"), "keygen", "--check"], { cwd: ROOT, env, encoding: "utf8" });
+  assert.match(`${inRepo.stdout}${inRepo.stderr}`, /never beside the main key or in Calopteryx's own repository/);
   cx(["new", "c1", "check.commit"]);
   assert.match(cx(["approve", "c1"]).out, /receipt work, done on the runner machine/);
 });

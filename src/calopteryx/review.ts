@@ -5,6 +5,7 @@
 // The cost of every call, as OpenRouter charged it, is appended to records/costs/reviews.csv for the monthly report.
 import { readFileSync, existsSync, appendFileSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { TOOL_ROOT } from "./platform.js";
 
 export interface Reviewer { role: "general" | "statistics"; model: string; name: string }
 export const GENERAL: Reviewer = { role: "general", model: "openai/gpt-6.1-sol", name: "OpenAI GPT-6.1 Sol" };
@@ -19,7 +20,7 @@ export interface Review { reviewer: Reviewer; instructions: string; issues: Issu
 
 // The reviewers' exact instructions are kept in reviewers/<role>.txt, so every test can be repeated word for word; each
 // review records the SHA-256 of the instructions it was given, and the exact messages sent are saved beside it.
-export const INSTRUCTIONS_DIR = "reviewers";
+export const INSTRUCTIONS_DIR = `${TOOL_ROOT}/reviewers`;
 export function instructions(r: Reviewer): { text: string; sha256: string } {
   const text = readFileSync(`${INSTRUCTIONS_DIR}/${r.role}.txt`, "utf8");
   return { text, sha256: createHash("sha256").update(text).digest("hex") };

@@ -7,6 +7,7 @@
 // "Lucy-Richardson"; such a text is reworded. Pattern matching cannot recognise every private detail, such as a private
 // person's name; the reviewers and Ecdysis's own screening are further checks, and the sign-off summary shows the exact text.
 import { existsSync, readFileSync } from "node:fs";
+import { TOOL_ROOT } from "./platform.js";
 
 /** Fields that hold keys, hashes and codes, never prose: not searched. */
 const TECHNICAL = new Set(["publicKey", "sha256", "commit", "image", "imageRef", "signature", "key", "seal", "pairing", "hash"]);
@@ -26,7 +27,7 @@ const PATTERNS: [string, RegExp][] = [
 
 /** The operator's own name and identifiers, from config.json (kept out of the repository) or config.example.json. */
 export function operatorTerms(): string[] {
-  for (const f of ["config.json", "config.example.json"]) {
+  for (const f of [`${TOOL_ROOT}/config.json`, `${TOOL_ROOT}/config.example.json`]) {
     if (existsSync(f)) { const t = JSON.parse(readFileSync(f, "utf8")).privacyTerms; if (Array.isArray(t)) return t.filter((x) => typeof x === "string" && x.trim()); }
   }
   throw new Error("no privacyTerms in config.json or config.example.json, so the operator's own details cannot be checked");

@@ -16,7 +16,7 @@
 //   npm run cx -- smoke <name>                  runner only: run a receipt's exact bundle once, outputs unread
 //   npm run cx -- run <name>                    runner only: run a committed receipt and its cross-check under the seed
 //   npm run cx -- heartbeat
-//   npm run cx -- keygen                        main machine only: generate the main key, once
+//   npm run cx -- keygen [--check]              the main key (main machine), or the check key (runner repository), once
 import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, rmSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -307,7 +307,7 @@ const COMMANDS: Record<string, () => unknown> = {
     if (existsSync(f)) die("a draft of that name already exists"); writeFileSync(f, JSON.stringify({ ...KINDS[t]!.template, context: "notes for the reviewers and for Lucy; never filed" }, null, 2)); console.log(`Draft template written to ${f}`); },
   check: () => check(need()), review: () => review(need()), summary: () => summary(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
   smoke: () => smoke(need()), run: () => run(need()), heartbeat,
-  keygen: async () => console.log(`Main key generated in keys/ (never printed). Public key: ${await keygen()}`),
+  keygen: async () => { const w = a.includes("--check") ? "check" : "main"; console.log(`${w === "check" ? "Check" : "Main"} key generated in keys/ (never printed). Public key: ${await keygen(w)}`); },
 };
 if (process.argv[1]?.endsWith("cli.ts")) {
   Promise.resolve((COMMANDS[cmd ?? ""] ?? (() => die(`commands: ${Object.keys(COMMANDS).join(", ")}`)))()).catch((e) => die(String(e?.message ?? e)));

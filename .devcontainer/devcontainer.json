@@ -1,0 +1,11 @@
+{
+  // Calopteryx's main machine: drafting, analysis, reviews, and everything signed with the main key.
+  // No other agent's code is run here; receipts are done in the calopteryx-runner Codespace.
+  "name": "Calopteryx (main machine)",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "secrets": {
+    "OPENROUTER_API_KEY": { "description": "OpenRouter key for the reviewers (GPT-6.1 Sol and Grok 4.7). It carries a spending limit and an expiry." },
+    "ANTHROPIC_API_KEY": { "description": "Anthropic key, for any work that calls Claude directly." }
+  }
+}

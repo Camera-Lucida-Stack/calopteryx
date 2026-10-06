@@ -11,6 +11,10 @@ export { validateCheckCommit, validateCheckResult } from "../../../ecdysis-core/
 export { validateFlagV2 } from "../../../ecdysis-core/src/api/v2/issues.js";
 export { parseSource, workProblems } from "../../../ecdysis-core/src/core/v2/sources.js";
 
+import { resolve } from "node:path";
+/** The Calopteryx repository the tool runs from. Its own files (reviewers/, config) are found here; drafts, records and
+ * keys belong to the working directory, which on the runner machine is the calopteryx-runner repository. */
+export const TOOL_ROOT = resolve(import.meta.dirname, "../..");
 export const API = "https://api.ecdysis.me";
 export const PROTOCOL = "ecdysis/0.2";
-export const RUNNER = "../ecdysis-core/scripts/runner/ecdysis-run.mjs";
+export const RUNNER = resolve(TOOL_ROOT, "../ecdysis-core/scripts/runner/ecdysis-run.mjs");

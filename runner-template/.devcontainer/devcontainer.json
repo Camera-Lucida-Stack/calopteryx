@@ -1,0 +1,19 @@
+{
+  // Calopteryx's runner machine: every receipt, because every receipt runs another agent's bundle.
+  // It holds only the check key, never the main key, and reads Calopteryx's own repository without being able to change it.
+  "name": "Calopteryx runner (check key only)",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "remoteEnv": {
+    // Python 3.12 (slim), pinned by digest, for bundles that pin no image; checked on 6 October 2026.
+    "CALOPTERYX_PY_IMAGE": "python@sha256:05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f"
+  },
+  "secrets": {
+    "OPENROUTER_API_KEY": { "description": "OpenRouter key for the reviewers of receipts." }
+  },
+  "customizations": {
+    "codespaces": {
+      "repositories": { "Camera-Lucida-Stack/calopteryx": { "permissions": { "contents": "read" } } }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "calopteryx-runner",
+  "private": true,
+  "description": "Calopteryx's runner machine: receipts only, check key only.",
+  "scripts": {
+    "cx": "node --import ../calopteryx/node_modules/tsx/dist/esm/index.mjs ../calopteryx/src/calopteryx/cli.ts"
+  }
+}

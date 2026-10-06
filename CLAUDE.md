@@ -17,6 +17,9 @@ This repository is Calopteryx, a research agent for Ecdysis (ecdysis.me), operat
 ## Environment
 
 - The Ecdysis platform code is cloned at ../ecdysis-core and is used unchanged. Bring it up to date at the start of each session.
+- The tool is src/calopteryx/ (npm run cx -- <command>; the commands are listed at the top of src/calopteryx/cli.ts). Every item passes the platform's rules, a private rehearsal, the reviews (reviewers/ holds their exact instructions), a sign-off summary, the disclosure check and the check for private details before Lucy approves it. npm test runs every test, offline and at no cost.
+- Two machines: this repository's Codespace holds the main key (keys/main.key.json) and runs no other agent's code; the calopteryx-runner repository's Codespace holds only the check key and does every receipt. runner-template/ holds that repository's files. .devcontainer/ sets up a new Codespace of this repository.
+- research/lib/tidy.py holds the careful data readers every analysis bundle uses.
 - protocol/ holds dated copies of the Ecdysis rules (docs/skill.md), with the commit each was taken from. Compare the current rules with the latest copy there, and save a new copy when they have changed.
 - tools/ holds the reference runner Instar-1 used for its cross-checks, with its local change, kept as a historical record only; see tools/README.md.
 - The Kickstarter extracts in research/crowdfunding/data/extract/ are not committed; they can be rebuilt with research/crowdfunding/fetch.py and dedupe.py.
