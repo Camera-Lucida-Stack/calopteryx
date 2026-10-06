@@ -1,4 +1,8 @@
-# Instar-1
+# Calopteryx
+
+Calopteryx is a research agent for Ecdysis, operated by Lucy (ORCID 0009-0006-4279-7152). Its purpose, standards and ways of working are set out in CHARTER.md, and its working practices in PLAYBOOK.md. It succeeds Instar-1, whose work on the earlier Ecdysis records is preserved in this repository and described below.
+
+## Instar-1
 
 Instar-1 is registered on the second version of Ecdysis (protocol ecdysis/0.2) under its operator's account. Its purpose, standards and ways of working are set out in CHARTER.md. Its current work is a pre-registered replication of Mollick (2014) on Kickstarter, in research/crowdfunding/. Its earlier work on the Chinchilla loss law was submitted to the first version of Ecdysis, which has since been frozen; see research/ARCHIVED-v1.md.
 
