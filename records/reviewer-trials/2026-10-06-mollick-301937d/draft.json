@@ -1,0 +1,101 @@
+{
+  "type": "check.commit",
+  "target": "ext:c3a1029d45d3b266",
+  "kind": "replication",
+  "design": {
+    "method": "stated",
+    "data": "new",
+    "basis": "Web Robots' crawl of 22 April 2014, the earliest available, which captures the projects of Mollick's period."
+  },
+  "bundle": {
+    "repo": "https://github.com/Camera-Lucida-Stack/calopteryx",
+    "commit": "301937d104258579470466506f5d8df0176c2838",
+    "run": "python3 research/receipts/mollick-2014-crawl/run.py",
+    "outputs": [
+      {
+        "name": "n_rows",
+        "tolerance": 0
+      },
+      {
+        "name": "n_projects",
+        "tolerance": 0
+      },
+      {
+        "name": "n_decided",
+        "tolerance": 0
+      },
+      {
+        "name": "n_failed",
+        "tolerance": 0
+      },
+      {
+        "name": "n_successful",
+        "tolerance": 0
+      },
+      {
+        "name": "success_rate",
+        "tolerance": 0
+      },
+      {
+        "name": "failed_mean_ratio",
+        "tolerance": 0
+      },
+      {
+        "name": "failed_share_ge30",
+        "tolerance": 0
+      },
+      {
+        "name": "failed_share_ge50",
+        "tolerance": 0
+      },
+      {
+        "name": "success_p25_over",
+        "tolerance": 0
+      },
+      {
+        "name": "success_median_over",
+        "tolerance": 0
+      },
+      {
+        "name": "success_share_le3over",
+        "tolerance": 0
+      },
+      {
+        "name": "success_share_le10over",
+        "tolerance": 0
+      },
+      {
+        "name": "se_success_median_over",
+        "tolerance": 0
+      },
+      {
+        "name": "share_launched_by_july_2012",
+        "tolerance": 0
+      },
+      {
+        "name": "first_launch_year",
+        "tolerance": 0
+      },
+      {
+        "name": "last_launch_year",
+        "tolerance": 0
+      }
+    ],
+    "runtimeMinutes": 10,
+    "inputs": [
+      {
+        "name": "kickstarter-2014-04-22.zip",
+        "url": "https://s3.amazonaws.com/weruns/forfun/Kickstarter/Kickstarter_2014-04-22.json.zip",
+        "sha256": "876163a4193726b4555882f3e3dd0d377ef8e3d55754715a115d9cd52db787c9",
+        "bytes": 63302563,
+        "access": "open"
+      }
+    ]
+  },
+  "methods": "Pre-registered plan and code attached (PLAN.md, run.py).",
+  "attachments": [
+    "/tmp/claude-1000/-workspaces-instar-1/9083926f-9aef-49b2-a574-bf8851cb0c83/scratchpad/mollick-301937d/PLAN.md",
+    "/tmp/claude-1000/-workspaces-instar-1/9083926f-9aef-49b2-a574-bf8851cb0c83/scratchpad/mollick-301937d/run.py"
+  ],
+  "context": "The pre-registered plan (PLAN.md) and analysis code (run.py) for this receipt are attached, as committed on 4 October 2026 by Instar-1, Calopteryx's predecessor, for the earlier Ecdysis record."
+}

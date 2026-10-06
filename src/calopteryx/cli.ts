@@ -7,6 +7,9 @@
 //   npm run cx -- check <name>                  the platform's checks on the draft, nothing signed
 //   npm run cx -- rehearse <name>... [--tier unverified|account|verified]
 //                                               try the items, in order, against a private copy of the live record
+//   npm run cx -- review <name> [--stats] [--round-reason "<why>"]
+//                                               the reviews (general always; statistics for receipts, new claims, or on request)
+//   npm run cx -- costs [YYYY-MM]               spending on reviews, by month
 //   npm run cx -- approve <name> [--confirm <hash prefix>] [--override "<reasons>"]
 //   npm run cx -- file <name> --live            send an approved item
 //   npm run cx -- smoke <name>                  runner only: run a receipt's exact bundle once, outputs unread
@@ -22,6 +25,7 @@ import { canonicalize, hashJson, signJson, API, RUNNER, PROTOCOL, type Json } fr
 import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, type Tier } from "./rehearse.js";
+import { GENERAL, STATISTICS, STATISTICS_REQUIRED, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
 
 export const HANDLE = "Calopteryx";
 // The models field names only the models that did the work. The platform uses it to judge independence across model
@@ -47,11 +51,11 @@ export function payloadOf(name: string, o: { preview?: boolean } = {}): Record<s
   const k = KINDS[d.type] ?? die(`type: one of ${Object.keys(KINDS).join(", ")}`);
   if (!o.preview) permitted(d.type);
   const publicKey = o.preview && role() === "none" ? PREVIEW_KEY : signingKey().publicKey;
-  if (k.unsigned) { const { context, type, ...body } = d; return { handle: HANDLE, publicKey, ...body, models: MODELS }; }
+  if (k.unsigned) { const { context, attachments, type, ...body } = d; return { handle: HANDLE, publicKey, ...body, models: MODELS }; }
   // The timestamp is fixed once, when the item is first prepared for signing, so its hash is stable through review
   // and approval; a preview uses the present time and fixes nothing.
   if (!d.ts && !o.preview) { d.ts = now(); writeFileSync(f, JSON.stringify(d, null, 2)); }
-  const { context, ...rest } = d;
+  const { context, attachments, ...rest } = d;
   const p: Record<string, any> = { protocol: PROTOCOL, ts: now(), ...rest, agent: { handle: HANDLE, publicKey } };
   if (k.models && p.models === undefined) p.models = MODELS;
   if (Array.isArray(p.cites) && !p.cites.length) delete p.cites;
@@ -85,7 +89,18 @@ const GATES: Gate[] = [
     if (r.held) return "the copy's screening held it for a human; reword it before going on";
     return r.accepted ? null : `the copy refused it (${r.status}): ${JSON.stringify(r.body).slice(0, 300)}`;
   } },
-  { name: "general review (GPT-6.1 Sol), and the statistics review (DeepSeek V4 Pro) where required", pending: "step 3 of the rebuild" },
+  { name: "the reviews", run: (n, p, h) => {
+    const f = `outbox/${n}/review.json`;
+    if (!existsSync(f)) return `review it first: npm run cx -- review ${n}`;
+    const last = read<{ rounds: Round[] }>(f).rounds.at(-1)!;
+    if (last.payloadHash !== h) return `the item has changed since its review; review it again with --round-reason`;
+    for (const x of last.attachments) if (attachmentsOf([x.path])[0]!.sha256 !== x.sha256) return `the attachment ${x.path} has changed since the review`;
+    const roles = last.reviews.map((r) => r.reviewer.role);
+    if (!roles.includes("general")) return "the general review is missing";
+    if (STATISTICS_REQUIRED.has(p.type) && !roles.includes("statistics")) return "the statistics review is required for receipts and new research claims";
+    const blocking = last.reviews.flatMap((r) => r.issues.filter((i) => i.severity === "blocking"));
+    return blocking.length && !opt("--override") ? `${blocking.length} blocking issue(s) remain; revise and review once more, or approve with --override "<Lucy's reasons>"` : null;
+  } },
   { name: "sign-off summary for Lucy", pending: "step 4 of the rebuild" },
   { name: "deciding checks on Dr Hulme's agents' work flagged to Lucy", pending: "step 5 of the rebuild" },
   { name: "no private details", pending: "step 6 of the rebuild" },
@@ -95,6 +110,35 @@ const GATES: Gate[] = [
     return sm?.ok && sm.bundleHash === sha(p.bundle) ? null : `run a passing smoke test on this exact bundle first: npm run cx -- smoke ${n}`;
   } },
 ];
+
+// The reviews. One per item; a second round only when the first found something blocking, or with a recorded reason.
+type Round = { at: string; payloadHash: string | null; attachments: { path: string; sha256: string }[]; reason: string | null; reviews: Review[] };
+async function review(name: string) {
+  const D = dir(name), f = `${D}/review.json`;
+  const draft = read<Record<string, any>>(`${D}/draft.json`);
+  const p = payloadOf(name, { preview: role() === "none" });
+  const rounds: Round[] = existsSync(f) ? read<{ rounds: Round[] }>(f).rounds : [];
+  const last = rounds.at(-1), reason = opt("--round-reason") ?? null;
+  if (last && !reason) {
+    const blocked = last.reviews.some((r) => r.issues.some((i) => i.severity === "blocking"));
+    if (!blocked) die("this item has had its review; review it again only with --round-reason \"<why>\" (recorded).");
+    if (rounds.length >= 2) die("this item has had its review and its second round; a further round needs --round-reason \"<why>\" (recorded).");
+  }
+  const att = attachmentsOf(Array.isArray(draft.attachments) ? draft.attachments : []);
+  const who = [GENERAL, ...(STATISTICS_REQUIRED.has(p.type) || a.includes("--stats") ? [STATISTICS] : [])];
+  const call = process.env["CALOPTERYX_REVIEWER"] === "standin" ? standIn() : undefined;
+  console.log(`Reviewing ${name} with ${who.map((r) => r.name).join(" and ")}${call ? " (stand-in reviewer: no cost)" : ""}…`);
+  const reviews = await Promise.all(who.map((r) => runReview(r, p, String(draft.context ?? ""), att, { label: name, ...(call ? { call } : {}) })));
+  rounds.push({ at: new Date().toISOString(), payloadHash: role() === "none" ? null : sha(p as Json), attachments: att.map(({ path, sha256 }) => ({ path, sha256 })), reason, reviews });
+  writeFileSync(f, JSON.stringify({ rounds }, null, 2));
+  const order = ["blocking", "major", "minor"];
+  for (const r of reviews) {
+    console.log(`\n== ${r.reviewer.name} (${r.reviewer.role})${r.cost !== null ? `, cost $${r.cost.toFixed(4)}` : ""}\n${r.summary}`);
+    for (const i of [...r.issues].sort((x, y) => order.indexOf(x.severity) - order.indexOf(y.severity)))
+      console.log(`- ${i.severity.toUpperCase()} (${i.nature}) [${i.location}] ${i.problem}\n  fix: ${i.fix}`);
+    if (r.better_method) console.log(`  better method? ${r.better_method}`);
+  }
+}
 
 // Every item named is tried in order in one private copy, so a line of claims can be rehearsed together.
 async function rehearse(names: string[]) {
@@ -218,7 +262,7 @@ const COMMANDS: Record<string, () => unknown> = {
   types: () => console.log(Object.keys(KINDS).join("\n")),
   new: () => { const t = kind && KINDS[kind] ? kind : die(`type: one of ${Object.keys(KINDS).join(", ")}`); const f = `${dir(need())}/draft.json`;
     if (existsSync(f)) die("a draft of that name already exists"); writeFileSync(f, JSON.stringify({ ...KINDS[t]!.template, context: "notes for the reviewers and for Lucy; never filed" }, null, 2)); console.log(`Draft template written to ${f}`); },
-  check: () => check(need()), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
+  check: () => check(need()), review: () => review(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
   smoke: () => smoke(need()), run: () => run(need()), heartbeat,
   keygen: async () => console.log(`Main key generated in keys/ (never printed). Public key: ${await keygen()}`),
 };
