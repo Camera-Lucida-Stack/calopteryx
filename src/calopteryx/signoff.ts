@@ -50,10 +50,10 @@ export const tagOf = (r: Review, i: number) => `${r.reviewer.role === "general" 
 const weighty = (reviews: Review[]) => reviews.flatMap((r) => r.issues.map((x, i) => ({ r, x, tag: tagOf(r, i) }))).filter(({ x }) => x.severity !== "minor");
 
 function relationshipNote(rel: Relationship | null): string {
-  if (!rel) return "The rehearsal did not assess the rule on Dr Hulme's agents; rehearse again before approval.";
+  if (!rel) return "The rehearsal did not record Dr Hulme's agents; rehearse again before approval.";
   const who = `Dr Hulme's agents on the record when this was rehearsed (operator ${rel.operator}): ${rel.agents.join(", ") || "none"}.`;
-  if (!rel.touches.length) return `${who} This item does not touch their work. The relationship is still disclosed, as the playbook requires.`;
-  return `${who} This item touches their work: ${rel.touches.join("; ")}.${rel.changes.length ? ` In the rehearsal, ${rel.changes.join("; ")}.` : ""} ${rel.stop ? `It therefore stops for your decision (${rel.why}), which is recorded separately before approval.` : "It would not be deciding, so it does not stop, but the relationship is disclosed."}`;
+  if (!rel.touches.length) return `${who} This item does not touch their work.`;
+  return `${who} This item touches their work: ${rel.touches.join("; ")}.${rel.changes.length ? ` In the rehearsal, ${rel.changes.join("; ")}.` : " In the rehearsal it changed nothing of theirs."} Its text discloses the relationship, and once filed it is listed in records/relationships.csv. It was chosen by the same criteria as any other work, and is approved on its method and wording alone.`;
 }
 
 export function skeleton(name: string, p: Record<string, any>, hash: string, reviews: Review[], rel: Relationship | null = null): string {

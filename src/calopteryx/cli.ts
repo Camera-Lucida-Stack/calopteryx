@@ -10,8 +10,6 @@
 //   npm run cx -- review <name> [--stats] [--round-reason "<why>"]
 //                                               the reviews (general always; statistics for receipts, new claims, or on request)
 //   npm run cx -- summary <name> [--replace]    the sign-off summary for Lucy, with its parts to be written marked
-//   npm run cx -- decide <name> --proceed|--decline --reason "<Lucy's words>"
-//                                               record Lucy's decision on an item that stops under the rule on Dr Hulme's agents
 //   npm run cx -- costs [YYYY-MM]               spending on reviews, by month
 //   npm run cx -- approve <name> [--confirm <hash prefix>] [--override "<reasons>"]
 //   npm run cx -- file <name> --live            send an approved item
@@ -28,7 +26,7 @@ import { canonicalize, hashJson, signJson, API, RUNNER, PROTOCOL, type Json } fr
 import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, type Tier } from "./rehearse.js";
-import { assess, type Relationship } from "./relationships.js";
+import { assess, disclosureProblem, AUDIT_LOG, type Relationship } from "./relationships.js";
 import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
 import { GENERAL, STATISTICS, STATISTICS_REQUIRED, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
 
@@ -107,15 +105,9 @@ const GATES: Gate[] = [
     return blocking.length && !opt("--override") ? `${blocking.length} blocking issue(s) remain; revise and review once more, or approve with --override "<Lucy's reasons>"` : null;
   } },
   { name: "the sign-off summary", run: (n, _p, h) => signoffProblem(`outbox/${n}`, h, latestReviews(n)) },
-  { name: "the rule on Dr Hulme's agents", run: (n, _p, h) => {
+  { name: "disclosure of the relationship with Dr Hulme", run: (n, p) => {
     const rel = read<{ relationship?: Relationship }>(`outbox/${n}/rehearsal.json`).relationship;
-    if (!rel) return "the rehearsal predates the rule; rehearse it again";
-    if (!rel.stop) return null;
-    const f = `outbox/${n}/hulme-decision.json`;
-    if (!existsSync(f)) return `this item stops for Lucy's decision (${rel.why}); record it with npm run cx -- decide ${n}`;
-    const d = read<{ payloadHash: string; decision: string }>(f);
-    if (d.payloadHash !== h) return "Lucy's decision was for a different version of the item; ask her again";
-    return d.decision === "proceed" ? null : "Lucy decided that this item does not proceed";
+    return rel ? disclosureProblem(p, rel) : "the rehearsal predates the disclosure check; rehearse it again";
   } },
   { name: "no private details", pending: "step 6 of the rebuild" },
   { name: "smoke test of the exact bundle", run: (n, p, _h) => {
@@ -124,19 +116,6 @@ const GATES: Gate[] = [
     return sm?.ok && sm.bundleHash === sha(p.bundle) ? null : `run a passing smoke test on this exact bundle first: npm run cx -- smoke ${n}`;
   } },
 ];
-
-// Lucy's decision on an item that stops under the rule on Dr Hulme's agents, in her words, recorded in records/.
-function decide(name: string) {
-  const D = dir(name), f = `${D}/rehearsal.json`;
-  const rel = existsSync(f) ? read<{ relationship?: Relationship }>(f).relationship : undefined;
-  if (!rel?.stop) die("this item does not stop under the rule on Dr Hulme's agents; there is nothing to decide.");
-  const decision = a.includes("--proceed") ? "proceed" : a.includes("--decline") ? "decline" : die("--proceed or --decline");
-  const reason = opt("--reason") ?? die('--reason "<Lucy\'s words>"');
-  const p = payloadOf(name);
-  writeFileSync(`${D}/hulme-decision.json`, JSON.stringify({ payloadHash: sha(p as Json), decision, reason, by: "Lucy", at: new Date().toISOString(), relationship: rel }, null, 2));
-  console.log(`Recorded: Lucy decided that ${name} ${decision === "proceed" ? "may proceed" : "does not proceed"}.`);
-  record(name);
-}
 
 const latestReviews = (n: string): Review[] => existsSync(`outbox/${n}/review.json`) ? read<{ rounds: Round[] }>(`outbox/${n}/review.json`).rounds.at(-1)!.reviews : [];
 
@@ -201,7 +180,7 @@ async function rehearse(names: string[]) {
     writeFileSync(`${dir(n)}/rehearsal.json`, JSON.stringify({ payloadHash: r === "none" ? null : sha(p as Json), liveEntries: copy.size,
       standIn: key?.standIn ?? null, tier, at: new Date().toISOString(), ...res, relationship }, null, 2));
     console.log(`${res.accepted ? "✓" : "✗"} ${n} (${res.type}): ${res.held ? "202, held by screening" : res.status} ${JSON.stringify(res.body).slice(0, 400)}`);
-    console.log(`  Dr Hulme's agents now: ${relationship.agents.join(", ") || "none"}. ${relationship.touches.length ? `Touches their work: ${relationship.touches.join("; ")}.` : "Does not touch their work."}${relationship.stop ? ` STOPS for Lucy's decision: ${relationship.why}${relationship.changes.length ? ` (${relationship.changes.join("; ")})` : ""}.` : ""}`);
+    console.log(`  Dr Hulme's agents now: ${relationship.agents.join(", ") || "none"}. ${relationship.touches.length ? `Touches their work: ${relationship.touches.join("; ")}${relationship.changes.length ? `; in the copy, ${relationship.changes.join("; ")}` : ""}. The relationship must be disclosed.` : "Does not touch their work."}`);
     if (!res.accepted) { process.exitCode = 1; break; }
   }
   if (r === "none") console.log("(Preview only: this machine holds no key, so these rehearsals cannot count towards an approval.)");
@@ -228,6 +207,18 @@ async function approve(name: string) {
   record(name);
 }
 
+// Every filed item that touches work by Dr Hulme's agents is listed, so the pattern of that work can be audited.
+function auditRelationship(name: string, p: Record<string, any>, status: number) {
+  const f = `outbox/${name}/rehearsal.json`;
+  const rel = existsSync(f) ? read<{ relationship?: Relationship }>(f).relationship : undefined;
+  if (!rel?.touches.length) return;
+  mkdirSync("records", { recursive: true });
+  const q = (x: unknown) => `"${String(x).replace(/"/g, '""')}"`;
+  if (!existsSync(AUDIT_LOG)) writeFileSync(AUDIT_LOG, "filed_at,item,type,http_status,his_agents,touches,changes_in_rehearsal\n");
+  writeFileSync(AUDIT_LOG, [new Date().toISOString(), name, p.type ?? "agent.register", status, rel.agents.join(" "), rel.touches.join("; "), rel.changes.join("; ")].map(q).join(",") + "\n", { flag: "a" });
+  console.log(`Listed in ${AUDIT_LOG}: this item touches work by Dr Hulme's agents.`);
+}
+
 async function file(name: string) {
   const D = dir(name);
   if (!existsSync(`${D}/signed.json`) || !existsSync(`${D}/approval.json`)) die("approve first.");
@@ -240,6 +231,7 @@ async function file(name: string) {
     body: JSON.stringify(s.payload ? { payload: s.payload, signature: s.signature } : s.body) });
   const body = await r.text();
   writeFileSync(`${D}/receipt.json`, JSON.stringify({ status: r.status, at: new Date().toISOString(), body }, null, 2));
+  auditRelationship(name, p, r.status);
   console.log(r.status, body.slice(0, 600));
   record(name);
 }
@@ -305,7 +297,7 @@ const COMMANDS: Record<string, () => unknown> = {
   types: () => console.log(Object.keys(KINDS).join("\n")),
   new: () => { const t = kind && KINDS[kind] ? kind : die(`type: one of ${Object.keys(KINDS).join(", ")}`); const f = `${dir(need())}/draft.json`;
     if (existsSync(f)) die("a draft of that name already exists"); writeFileSync(f, JSON.stringify({ ...KINDS[t]!.template, context: "notes for the reviewers and for Lucy; never filed" }, null, 2)); console.log(`Draft template written to ${f}`); },
-  check: () => check(need()), review: () => review(need()), summary: () => summary(need()), decide: () => decide(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
+  check: () => check(need()), review: () => review(need()), summary: () => summary(need()), costs: () => console.log(costReport(name)), rehearse: () => rehearse(a.slice(1).filter((x, i, all) => !x.startsWith("--") && !all[i - 1]?.startsWith("--"))), approve: () => approve(need()), file: () => file(need()),
   smoke: () => smoke(need()), run: () => run(need()), heartbeat,
   keygen: async () => console.log(`Main key generated in keys/ (never printed). Public key: ${await keygen()}`),
 };

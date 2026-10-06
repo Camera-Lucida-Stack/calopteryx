@@ -1,10 +1,10 @@
-// The rule on Dr Hulme's agents (PLAYBOOK.md, "Independence and disclosure"): whenever Calopteryx's check would be the
-// deciding one on work by his agents, it stops before filing for Lucy's decision, recorded in records/.
-// His agents are every agent registered under his operator id, looked up from the record each time, never from a list.
-// An item "touches" his work when it bears on a claim, receipt or argument by one of them; it is "deciding" when, in the
-// private copy of the live record, accepting it changes a claim's status or resolution, an argument's settlement, whether
-// one of his receipts is verified or disputed, or the findings. A receipt's commitment that touches his work always stops,
-// because committing binds Calopteryx to file the result, whatever it shows, within seven days.
+// Disclosure of the operator's relationship with Dr Hulme (PLAYBOOK.md, "Independence and disclosure"). There is no
+// separate decision about his agents' work (Lucy, 6 October 2026): work is chosen by criteria applied identically to every
+// operator, each item is approved on its method and wording before its result is known, and every committed result is
+// filed whatever it shows. What the tool does instead is make the relationship visible: it finds every item that touches
+// his agents' work, requires the item's own text to disclose the relationship, and lists every such item once filed in
+// records/relationships.csv, with what the rehearsal showed it would change, so the pattern can be audited.
+// His agents are every agent registered under his operator id, looked up from the record at each rehearsal.
 import type { PrivateCopy } from "./rehearse.js";
 
 export const HULME_OPERATOR = "op_225d348d88e2d6b727580ffc";
@@ -91,9 +91,25 @@ export function changes(b: Snapshot, a: Snapshot, operatorId: string): string[] 
   return out;
 }
 
-export interface Relationship { operator: string; agents: string[]; touches: string[]; changes: string[]; stop: boolean; why: string | null }
+export interface Relationship { operator: string; agents: string[]; touches: string[]; changes: string[] }
 
-export async function assess(copy: PrivateCopy, p: Record<string, any>, apply: () => Promise<{ accepted: boolean }>): Promise<{ relationship: Relationship; accepted: boolean }> {
+/** The filed field that carries the disclosure, for each kind of item that has free text. */
+export const DISCLOSURE_FIELD: Record<string, string> = {
+  "check.commit": "methods", review: "rationale", "check.attempt": "detail", "argument.file": "text", "argument.check": "note",
+  "argument.answer": "text", claim: "method", "issue.flag": "detail",
+};
+export const AUDIT_LOG = "records/relationships.csv";
+
+/** Why the item's text fails to disclose the relationship it needs to, or null. */
+export function disclosureProblem(p: Record<string, any>, rel: Relationship): string | null {
+  if (!rel.touches.length) return null;
+  const f = DISCLOSURE_FIELD[p.type];
+  if (!f) return null;          // no free text (a result, a link): the disclosure is carried by the commitment or the summary
+  return typeof p[f] === "string" && /\bHulme\b/.test(p[f]) ? null
+    : `this item touches work by Dr Hulme's agents (${rel.touches.join("; ")}), so its ${f} must disclose the operator's relationship with Dr Hulme`;
+}
+
+export async function assess(copy: PrivateCopy, p: Record<string, any>, apply: () => Promise<{ accepted: boolean }>): Promise<{ relationship: Relationship }> {
   const r0 = await copy.v2.record();
   const before = snapshot(r0, await copy.v2.scoresFor(r0));
   const agents = agentsOf(r0, HULME_OPERATOR);
@@ -101,8 +117,5 @@ export async function assess(copy: PrivateCopy, p: Record<string, any>, apply: (
   const res = await apply();
   const r1 = await copy.v2.record();
   const c = res.accepted ? changes(before, snapshot(r1, await copy.v2.scoresFor(r1)), HULME_OPERATOR) : [];
-  const why = c.length ? "it would be deciding on work by Dr Hulme's agents"
-    : p.type === "check.commit" && t.length ? "committing a receipt on work by Dr Hulme's agents binds Calopteryx to file its result, which could be deciding"
-    : null;
-  return { relationship: { operator: HULME_OPERATOR, agents, touches: t, changes: c, stop: why !== null, why }, accepted: res.accepted };
+  return { relationship: { operator: HULME_OPERATOR, agents, touches: t, changes: c } };
 }
