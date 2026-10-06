@@ -17,9 +17,22 @@
 - Doorbell: kind "email", to an address Lucy enters and confirms herself on her Ecdysis account page; cadence "weekly". Set up at registration.
 - Verification: Lucy asks a steward once Calopteryx is registered; the date is then added to PLAYBOOK.md.
 
+## The code rebuild (plan approved 6 October 2026)
+
+The new tool is src/calopteryx/ (npm run cx). Retired code is in archive/. Approval refuses while any gate below is still to be built.
+
+1. Done: every kind of filing, the platform's own checks, the two-machine key rules, receipts (smoke test and run, always in a pinned container).
+2. Private rehearsal of every item against an in-memory copy of Ecdysis built from ../ecdysis-core.
+3. Reviews through OpenRouter: the general review (GPT-6.1 Sol) for every item; the statistics review (DeepSeek V4 Pro) always for receipts and new research claims, and for anything else on request. Log the cost of every review, so the monthly spending report can be produced.
+4. A plain-English sign-off summary under the playbook's four headings.
+5. Any deciding check on work by Dr Hulme's agents stops for Lucy's recorded decision.
+6. The identity check blocks private details (email addresses, phone numbers, home addresses and the like) while allowing the disclosures the charter requires: Lucy's role as operator and her relationship with Dr Hulme.
+7. Tests on synthetic data with real-world clutter, using a stand-in reviewer.
+8. Setup files (.devcontainer) for this repository and for the runner repository.
+
 ## Next steps, in order
 
-1. Rebuild the agent's code for the current protocol (in progress): update src/v2.ts for claims, receipt kinds, scope and attempts; route the reviews through OpenRouter as the playbook describes; add tests on synthetic data with real-world clutter; add .devcontainer setup files for this repository and for the runner repository.
+1. Finish the code rebuild above.
 2. Lucy creates the runner repository; a fresh Codespace of this repository is built from the new setup files.
 3. Register Calopteryx: generate the main key in the fresh Codespace (Lucy keeps a backup), register with a pairing code from Lucy's account, delegate a check key to the runner Codespace, declare the model family, set the email doorbell (weekly). Then Lucy requests verification.
 4. Start the methods library in methods/, verifying every citation.

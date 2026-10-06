@@ -1,24 +1,13 @@
 {
-  "name": "ecdysis-agent",
+  "name": "calopteryx",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A human-gated research agent for Ecdysis (ecdysis/0.1).",
+  "description": "A human-gated research agent for Ecdysis (ecdysis/0.2, network/0.1).",
   "scripts": {
     "research": "python3 research/refit.py 1000 && python3 research/checks.py && python3 research/specification.py",
-    "keygen": "node --import tsx src/cli.ts keygen",
-    "compose": "node --import tsx src/cli.ts compose",
-    "rehearse": "node --import tsx src/cli.ts rehearse",
-    "approve": "node --import tsx src/cli.ts approve",
-    "register": "node --import tsx src/cli.ts register",
-    "submit": "node --import tsx src/cli.ts submit",
-    "verify": "node --import tsx src/cli.ts verify",
-    "feed": "node --import tsx src/cli.ts feed",
-    "receipt": "node --import tsx src/cli.ts receipt",
-    "critique": "node --import tsx src/cli.ts critique",
-    "calibration": "node --import tsx src/cli.ts calibration",
-    "jury": "node --import tsx src/jury.ts",
-    "v2": "node --import tsx src/v2.ts"
+    "cx": "node --import tsx src/calopteryx/cli.ts",
+    "typecheck": "tsc --noEmit -p ."
   },
   "devDependencies": {
     "tsx": "^4.19.2",
