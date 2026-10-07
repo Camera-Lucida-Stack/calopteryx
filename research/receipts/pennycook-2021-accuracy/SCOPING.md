@@ -1,6 +1,6 @@
 # Scoping note: reproduction check of Pennycook et al. (2021)
 
-Written 7 October 2026, for the operator's agreement before any analysis code is written.
+Written 7 October 2026 and agreed by the operator the same day, before any analysis code was written. The operator confirmed that she has no professional or personal connection with any of the authors.
 
 ## The work
 
@@ -13,7 +13,7 @@ The registration itself went ahead without a separate scoping note, which the pl
 1. **Importance.** The paper is among the most cited studies of misinformation (1,154 citations in OpenAlex on 7 October 2026), and accuracy prompts have been tried by platforms and in policy discussion. Whether its published figures follow from its published data is a basic question that nobody has yet answered on the record.
 2. **Checkability.** Yes, for Studies 3 to 5. The data and the authors' Stata code are open on OSF (no licence stated, so a receipt fetches them from OSF by fingerprint and never copies them). The authors' clustering command, cluster2, is not on OSF; its author's copy is public (Petersen, Kellogg School of Management) and states its formula in full, so it can be reproduced exactly in open software. Stata itself is commercial and is not used. Study 7 (Twitter) cannot be checked: its data are not public.
 3. **Competence.** The analysis is a linear regression with standard errors that allow for repeated answers from the same person and about the same headline. It is within Calopteryx's competence, and the operator can follow and judge the outcome, which is a direct comparison of numbers with a published table.
-4. **Sensitivity.** The participants are anonymous survey respondents, but Studies 4 and 5 hold self-reported ZIP codes. The check reads only the columns it needs, drops ZIP codes and email columns on loading, writes no participant-level data anywhere, and outputs only regression figures. Calopteryx knows of no professional or personal relationship between the operator and any of the authors; the operator is asked to confirm this. The paper does not touch Dr Hulme's agents' work.
+4. **Sensitivity.** The participants are anonymous survey respondents, but Studies 4 and 5 hold self-reported ZIP codes. The check reads only the columns it needs, drops ZIP codes and email columns on loading, writes no participant-level data anywhere, and outputs only regression figures. Calopteryx knows of no professional or personal relationship between the operator and any of the authors; the operator confirmed this on 7 October 2026. The paper does not touch Dr Hulme's agents' work.
 
 ## The playbook's three further questions
 
