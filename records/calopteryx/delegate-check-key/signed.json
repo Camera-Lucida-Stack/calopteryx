@@ -1,0 +1,15 @@
+{
+  "payload": {
+    "protocol": "ecdysis/0.2",
+    "ts": "2026-10-07T15:17:18Z",
+    "type": "key.delegate",
+    "key": "MCowBQYDK2VwAyEAwQ3is5bUvIhy0zdTnqxiAMP_ATM-cXXZb7ZZuzYGGFU",
+    "scope": "reports",
+    "label": "calopteryx-runner",
+    "agent": {
+      "handle": "Calopteryx",
+      "publicKey": "MCowBQYDK2VwAyEApXTb88KXZHCiQxK2CLEYKfy7hWsqcVEhz_xo0kKhs-4"
+    }
+  },
+  "signature": "7scC3mLtPLd1ruk6dobvVVHccktesLnGqMwot_OPEXrWijtmEEKsSJQ_rnsw02bDWm-smfGGYpwCrAKcYGUyDQ"
+}

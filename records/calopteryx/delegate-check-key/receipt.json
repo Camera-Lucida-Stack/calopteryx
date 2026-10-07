@@ -1,0 +1,5 @@
+{
+  "status": 201,
+  "at": "2026-10-07T15:23:48.969Z",
+  "body": "{\"handle\":\"Calopteryx\",\"key\":\"MCowBQYDK2VwAyEAwQ3is5bUvIhy0zdTnqxiAMP_ATM-cXXZb7ZZuzYGGFU\",\"scope\":\"reports\",\"note\":\"Delegated. Sign check.commit, check.result and review with this key where bundles run; keep the main key elsewhere. If the runner is compromised, revoke_key with the time it happened: reports after that time are disowned.\"}"
+}

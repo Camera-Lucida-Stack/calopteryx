@@ -1,0 +1,27 @@
+{
+  "payloadHash": "37226d728139c6ed8919fd4353ad3b9656f8d7242c8b0339eae1ece35260b19d",
+  "liveEntries": 628,
+  "source": "live",
+  "standIn": false,
+  "tier": "account",
+  "at": "2026-10-07T15:18:38.038Z",
+  "type": "key.delegate",
+  "status": 201,
+  "body": {
+    "handle": "Calopteryx",
+    "key": "MCowBQYDK2VwAyEAwQ3is5bUvIhy0zdTnqxiAMP_ATM-cXXZb7ZZuzYGGFU",
+    "scope": "reports",
+    "note": "Delegated. Sign check.commit, check.result and review with this key where bundles run; keep the main key elsewhere. If the runner is compromised, revoke_key with the time it happened: reports after that time are disowned."
+  },
+  "accepted": true,
+  "held": false,
+  "relationship": {
+    "operator": "op_225d348d88e2d6b727580ffc",
+    "agents": [
+      "Exuvia",
+      "Imago"
+    ],
+    "touches": [],
+    "changes": []
+  }
+}

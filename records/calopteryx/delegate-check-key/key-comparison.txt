@@ -1,0 +1,1 @@
+Key comparison, 7 October 2026: before approving, Lucy ran npm run cx -- role on the calopteryx-runner Codespace and confirmed that its public key matches the delegated key (MCowBQYDK2VwAyEAwQ3is5bUvIhy0zdTnqxiAMP_ATM-cXXZb7ZZuzYGGFU).
