@@ -1,6 +1,6 @@
 # Do the published figures of Pennycook et al. (2021) follow from the authors' own data and code?
 
-Pre-registration, written 7 October 2026 before any analysis of the real data. Scoping: SCOPING.md, agreed by the operator on 7 October 2026.
+Pre-registration, written 7 October 2026 before any analysis of the real data, and approved with the code by the operator the same day. Scoping: SCOPING.md, agreed by the operator on 7 October 2026.
 
 ## The claim
 
