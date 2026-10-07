@@ -205,7 +205,6 @@ def main():
         out[f"{study}_n_obs"] = n
         out[f"{study}_n_participants"] = n_id
         out[f"{study}_n_headlines"] = n_item
-        out[f"{study}_b_treatment"] = round(b[1], 10)
         t = TARGETS[study]
         met += at_most(abs(got["b"] - t["b"]), B_TOLERANCE)
         met += at_most(abs(got["se"] / t["se"] - 1), SE_TOLERANCE)

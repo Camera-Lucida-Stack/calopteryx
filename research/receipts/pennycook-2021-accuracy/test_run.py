@@ -108,8 +108,11 @@ class Synthetic(unittest.TestCase):
         self.assertEqual(self.out["period_from"], 20171004)
         self.assertEqual(self.out["period_to"], 20190502)
 
-    def test_at_most_twenty_numeric_outputs(self):
-        self.assertLessEqual(len([k for k in self.out if not k.startswith("period_")]), 20)
+    def test_at_most_twenty_numeric_outputs_period_included(self):
+        # The reference runner refuses more than 20 keys in outputs.json, counting period_from and period_to.
+        self.assertLessEqual(len(self.out), 20)
+        self.assertEqual(len(self.out), 19)
+        self.assertNotIn("s3_b_treatment", self.out)
         self.assertTrue(all(isinstance(v, (int, float)) for v in self.out.values()))
 
     def test_synthetic_data_do_not_meet_the_published_targets(self):
@@ -131,7 +134,6 @@ class Synthetic(unittest.TestCase):
                  - fit.fit(cov_type="HC1").cov_params())
             b = fit.fit().params
             self.assertAlmostEqual(self.out[f"{s}_b_txv"], b[3], places=9)
-            self.assertAlmostEqual(self.out[f"{s}_b_treatment"], b[1], places=9)
             self.assertAlmostEqual(self.out[f"{s}_se_txv"], float(np.sqrt(v[3, 3])), places=9)
 
 

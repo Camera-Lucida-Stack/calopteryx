@@ -23,6 +23,8 @@ export interface Kind {
 }
 
 type Res = { ok: true } | { ok: false; errors: string[] };
+/** The reference runner's limit on outputs, period_from and period_to included (ecdysis-core scripts/runner/ecdysis-run.mjs). */
+export const RUNNER_MAX_OUTPUTS = 20;
 const errorsOf = (f: (p: unknown) => Res) => (p: unknown) => { const r = f(p); return r.ok ? [] : r.errors; };
 const len = (v: unknown, name: string, min: number, max: number) =>
   typeof v === "string" && v.trim().length >= min && v.length <= max ? [] : [`${name}: ${min} to ${max} characters`];
@@ -88,7 +90,11 @@ export const KINDS: Record<string, Kind> = {
     template: { type: "submission.withdraw", subject: "the subject the 202 gave", reason: "10 to 400 characters" },
   },
   "check.commit": {
-    endpoint: "/v2/checks", key: "report", runner: true, models: true, validate: errorsOf(validateCheckCommit),
+    endpoint: "/v2/checks", key: "report", runner: true, models: true,
+    // The reference runner refuses more than 20 outputs in all, counting period_from and period_to, although the archive
+    // does not count those two (found by a smoke test, 7 October 2026), so a bundle is held to the stricter limit here.
+    validate: (p) => { const o = (p as Record<string, any>)?.bundle?.outputs; return [...errorsOf(validateCheckCommit)(p),
+      ...(Array.isArray(o) && o.length > RUNNER_MAX_OUTPUTS ? [`bundle.outputs: the reference runner allows at most ${RUNNER_MAX_OUTPUTS} in all, period_from and period_to included`] : [])]; },
     template: { type: "check.commit", target: "ecd:… or ext:…", kind: "replication",
       design: { method: "stated", data: "new", basis: "why the data cover the claim's population and period (20 to 400)", period: { from: "YYYY-MM", to: "YYYY-MM" } },
       bundle: { repo: "https://github.com/…", commit: "40 hex", image: "sha256:…", imageRef: "registry/name@sha256:…", run: "python3 …",

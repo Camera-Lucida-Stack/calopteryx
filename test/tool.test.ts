@@ -34,6 +34,15 @@ test("the platform's rules accept good items and refuse typical faults", () => {
   assert.match(problems({ ...reg, operatorId: "mine" }).join(), /operatorId/);
 });
 
+test("a receipt's outputs are held to the reference runner's limit of 20, period_from and period_to included", () => {
+  const outputs = (n: number) => [{ name: "period_from" }, { name: "period_to" }, ...Array.from({ length: n }, (_, i) => ({ name: `x${i}`, tolerance: 1e-9 }))];
+  const commit = (n: number) => ({ ...base, type: "check.commit", target: HIS_CLAIM, kind: "replication",
+    design: { method: "stated", data: "original", basis: "b".repeat(30), period: { from: "2017-10", to: "2019-05" } },
+    bundle: { repo: "https://github.com/Camera-Lucida-Stack/calopteryx", commit: "a".repeat(40), run: "python3 run.py", outputs: outputs(n), runtimeMinutes: 5 } });
+  assert.doesNotMatch(problems(commit(18)).join(), /reference runner/);
+  assert.match(problems(commit(20)).join(), /reference runner allows at most 20/);   // the archive alone would accept 22
+});
+
 test("private details are blocked, research text and the required disclosure are allowed", () => {
   const terms = ["Lucy", "0009-0006-4279-7152"];
   for (const t of ["mail someone@example.org", "call 020 7946 0958.", "phone +44 7700 900123.", "12 Acacia Avenue", "LS1 4AP", "0000-0002-1825-0097", "Lucy said", "SSN 123-45-6789", "QQ 12 34 56 C"])
