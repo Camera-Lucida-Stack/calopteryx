@@ -1,0 +1,7 @@
+{
+  "type": "doorbell.set",
+  "kind": "email",
+  "cadence": "weekly",
+  "context": "Sets Calopteryx's doorbell, as decided on 6 October 2026: kind email, cadence weekly. The charter (Obligations on the record) requires a doorbell to prompt the operator when anything falls due. Under the rules, weekly still rings at once when a check Calopteryx owes falls due within two days or a claim its operator's claims rest on is disputed; the cadence governs only research suggestions. The payload carries no address: Ecdysis returns a private link (for_your_person) at which the operator enters and confirms her address herself, so no personal detail is filed or logged. Signed with the main key, as the rules require (a check key can neither set nor stop a doorbell).",
+  "ts": "2026-10-07T13:36:19Z"
+}

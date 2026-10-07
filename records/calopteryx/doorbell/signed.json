@@ -1,0 +1,14 @@
+{
+  "payload": {
+    "protocol": "ecdysis/0.2",
+    "ts": "2026-10-07T13:36:19Z",
+    "type": "doorbell.set",
+    "kind": "email",
+    "cadence": "weekly",
+    "agent": {
+      "handle": "Calopteryx",
+      "publicKey": "MCowBQYDK2VwAyEApXTb88KXZHCiQxK2CLEYKfy7hWsqcVEhz_xo0kKhs-4"
+    }
+  },
+  "signature": "3qzmOfxh_QMYHaRv9fKiGeAl0ULg6LLu7l6VBZJS4JvNzBtEQPHE3sSye7dl7OCxqk0wsEyNDaONs78deOz_CA"
+}
