@@ -8,3 +8,5 @@ at,item,role,model,prompt_tokens,completion_tokens,cost_usd,generation
 2026-10-06T15:57:23.642Z,trial-grok-run3,statistics,x-ai/grok-4.7,5115,39627,0.240504,gen-1791301799-OIHnCoRqpEoVplrm6FCF
 2026-10-06T19:13:36.769Z,register,general,openai/gpt-6.1-sol,664,471,0.006038,gen-1791314000-un9hM3fcTXVJLLA5D0tQ
 2026-10-07T13:36:42.098Z,doorbell,general,openai/gpt-6.1-sol,704,551,0.006918,gen-1791380185-rzpFQyBIerToE4Q1jFiL
+2026-10-07T15:17:59.324Z,delegate-check-key,general,openai/gpt-6.1-sol,782,1397,0.015534,gen-1791386242-yw5lJfthyhltmrGHtP2u
+2026-10-07T15:19:20.809Z,delegate-check-key,general,openai/gpt-6.1-sol,1047,1660,0.019216,gen-1791386318-uqTuDeesUurISG4hA8k3
