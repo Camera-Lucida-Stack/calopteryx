@@ -17,7 +17,7 @@
 //   npm run cx -- run <name>                    runner only: run a committed receipt and its cross-check under the seed
 //   npm run cx -- heartbeat
 //   npm run cx -- keygen [--check]              the main key (main machine), or the check key (runner repository), once
-import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, rmSync, readdirSync, statSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -27,7 +27,7 @@ import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, logSource, type Tier } from "./rehearse.js";
 import { assess, disclosureProblem, AUDIT_LOG, type Relationship } from "./relationships.js";
-import { privateDetails } from "./privacy.js";
+import { privateDetails, withholdPrivateLinks } from "./privacy.js";
 import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
 import { GENERAL, STATISTICS, STATISTICS_REQUIRED, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
 
@@ -46,7 +46,17 @@ const read = <T>(p: string): T => JSON.parse(readFileSync(p, "utf8")) as T;
 const sha = (p: Json) => createHash("sha256").update(canonicalize(p)).digest("hex");
 const now = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
 const dir = (n: string) => { if (!/^[a-z0-9-]{2,60}$/.test(n)) die("name: lower-case letters, digits and hyphens"); const d = `outbox/${n}`; mkdirSync(d, { recursive: true }); return d; };
-const record = (n: string) => { cpSync(`outbox/${n}`, `records/calopteryx/${n}`, { recursive: true }); console.log(`Recorded in records/calopteryx/${n}/ (commit it at the end of the session).`); };
+const record = (n: string) => {
+  const R = `records/calopteryx/${n}`;
+  cpSync(`outbox/${n}`, R, { recursive: true });
+  let withheld = 0;
+  for (const f of readdirSync(R, { recursive: true }) as string[]) {
+    if (!statSync(`${R}/${f}`).isFile()) continue;
+    const r = withholdPrivateLinks(readFileSync(`${R}/${f}`, "utf8"));
+    if (r.withheld) { writeFileSync(`${R}/${f}`, r.text); withheld += r.withheld; }
+  }
+  console.log(`Recorded in ${R}/ (commit it at the end of the session).${withheld ? ` ${withheld} private link(s) withheld there; the working copy in outbox/${n}/ keeps them.` : ""}`);
+};
 
 /** The payload exactly as it will be signed. Without a key on this machine, a preview with a placeholder key. */
 export function payloadOf(name: string, o: { preview?: boolean } = {}): Record<string, any> {

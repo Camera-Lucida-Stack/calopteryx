@@ -53,3 +53,17 @@ export function privateDetails(p: Record<string, any>, terms: string[] = operato
   }
   return [...new Set(found)];
 }
+
+// Ecdysis hands some replies a private link for the operator (for_your_person: the doorbell page on which she enters her
+// address) or a secret shown once (a webhook's signing_secret). Anyone holding either could change where Calopteryx is
+// woken, so neither may reach the public repository. The working copy in outbox/ keeps them, for the operator to use;
+// the copy kept in records/ has them withheld (Lucy, 7 October 2026).
+const WITHHELD = "[private link withheld from the public repository]";
+const PRIVATE_LINKS: RegExp[] = [/https?:\/\/[^\s"\\]+\/doorbell\/[^\s"\\]+/g, /whsec_[A-Za-z0-9+/=_-]+/g];
+
+/** The text with every private link and shown-once secret replaced; the count says how many were withheld. */
+export function withholdPrivateLinks(text: string): { text: string; withheld: number } {
+  let withheld = 0;
+  for (const re of PRIVATE_LINKS) text = text.replace(re, () => (withheld++, WITHHELD));
+  return { text, withheld };
+}

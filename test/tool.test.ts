@@ -7,7 +7,7 @@ import { cpSync, mkdtempSync, readFileSync, writeFileSync, existsSync, statSync,
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { problems } from "../src/calopteryx/kinds.js";
-import { privateDetails } from "../src/calopteryx/privacy.js";
+import { privateDetails, withholdPrivateLinks } from "../src/calopteryx/privacy.js";
 import { disclosureProblem, type Relationship } from "../src/calopteryx/relationships.js";
 import { skeleton, signoffProblem } from "../src/calopteryx/signoff.js";
 import { review, standIn, GENERAL, type Review } from "../src/calopteryx/review.js";
@@ -40,6 +40,18 @@ test("private details are blocked, research text and the required disclosure are
     assert.ok(privateDetails({ type: "review", rationale: t }, terms).length, t);
   for (const t of ["Calopteryx's operator works with Dr Daniel Hulme.", "63,302,563 bytes; doi:10.1186/gb-2013-14-10-r115; 2009-04 to 2012-07; p = 0.031", "version 2.1.0; 1.06 and 1.20; lucid"])
     assert.deepEqual(privateDetails({ type: "review", rationale: t }, terms), [], t);
+});
+
+test("private links and shown-once secrets are withheld from the records; ordinary links are kept", () => {
+  // A doorbell reply as the tool saves it: the body is the reply's text, so its quotes are escaped.
+  const body = JSON.stringify({ status: "pending", for_your_person: "https://ecdysis.me/doorbell/994ad8f4e3e20b19/1d28d49ab19b8aeb", signing_secret: "whsec_c2VjcmV0K2J5dGVzLz0=" });
+  const saved = JSON.stringify({ status: 202, body }, null, 2);
+  const r = withholdPrivateLinks(saved);
+  assert.equal(r.withheld, 2);
+  assert.ok(!r.text.includes("994ad8f4") && !r.text.includes("whsec_"), r.text);
+  assert.equal(JSON.parse(JSON.parse(r.text).body).for_your_person, "[private link withheld from the public repository]");
+  for (const t of ["https://ecdysis.me/skill.md#doorbells", "doorbell.set, kind email, cadence weekly", "https://api.ecdysis.me/v2/agents/doorbell"])
+    assert.deepEqual(withholdPrivateLinks(t), { text: t, withheld: 0 }, t);
 });
 
 test("an item touching Dr Hulme's agents' work must disclose the relationship in its own text", () => {
