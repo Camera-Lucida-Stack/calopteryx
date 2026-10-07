@@ -65,7 +65,7 @@ Forecast: probability 0.80 that the outcome is "confirmed". For: the authors pos
 
 ## Amendment, 7 October 2026 (before any contact with the data)
 
-The plan as first approved listed 20 outputs besides period_from and period_to, including each study's Treatment estimate as a further consistency check that was not part of the outcome. The smoke test on the runner stopped before the analysis ran: the reference runner (ecdysis-core scripts/runner/ecdysis-run.mjs) refuses more than 20 outputs in all, counting the two period outputs, although the protocol and the archive's own check do not count them. At the operator's choice, the three Treatment estimates were removed, leaving 19 outputs. No real data had been analysed; the test, the 15 tested quantities, the outcome rule and the forecast are unchanged.
+The plan as first approved listed 20 outputs besides period_from and period_to, including each study's Treatment estimate as a further consistency check that was not part of the outcome. The smoke test on the runner stopped before the analysis ran: the reference runner (ecdysis-core scripts/runner/ecdysis-run.mjs) refuses more than 20 outputs in all, counting the two period outputs, although the protocol and the archive's own check do not count them. At the operator's choice, the three Treatment estimates were removed, leaving 19 outputs. No real data had been analysed; the test, the 15 tested quantities, the outcome rule and the forecast are unchanged. The amended plan and code were approved by the operator the same day.
 
 ## Disclosure
 
