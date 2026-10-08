@@ -25,7 +25,7 @@ import { spawnSync } from "node:child_process";
 import { canonicalize, hashJson, signJson, API, RUNNER, PROTOCOL, type Json } from "./platform.js";
 import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
-import { fetchLiveLog, privateCopy, signer, rehearseOne, logSource, type Tier } from "./rehearse.js";
+import { fetchLiveLog, privateCopy, signer, rehearseOne, logSource, rehearsalRefusal, crossCheckUnrehearsable, type Tier } from "./rehearse.js";
 import { assess, disclosureProblem, AUDIT_LOG, type Relationship } from "./relationships.js";
 import { privateDetails, withholdPrivateLinks } from "./privacy.js";
 import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
@@ -97,14 +97,14 @@ function check(name: string) {
 type Gate = { name: string; pending?: string; run?: (name: string, p: Record<string, any>, h: string) => string | null };
 const GATES: Gate[] = [
   { name: "the platform's own checks", run: (_n, p) => { const e = problems(p); return e.length ? e.join("; ") : null; } },
-  { name: "private rehearsal against a copy of the live record", run: (n, _p, h) => {
+  { name: "private rehearsal against a copy of the live record", run: (n, p, h) => {
     const f = `outbox/${n}/rehearsal.json`;
     if (!existsSync(f)) return `rehearse it first: npm run cx -- rehearse ${n}`;
     const r = read<any>(f);
     if (r.payloadHash !== h) return `the item has changed since its rehearsal; rehearse it again: npm run cx -- rehearse ${n}`;
     if (r.source !== "live" && r.source !== logSource()) return "it was rehearsed against a saved log, which cannot support an approval; rehearse it against the live record";
     if (r.held) return "the copy's screening held it for a human; reword it before going on";
-    return r.accepted ? null : `the copy refused it (${r.status}): ${JSON.stringify(r.body).slice(0, 300)}`;
+    return rehearsalRefusal(p, r, opt("--rehearsal-override"));
   } },
   { name: "the reviews", run: (n, p, h) => {
     const f = `outbox/${n}/review.json`;
@@ -141,7 +141,8 @@ function summary(name: string) {
   if (!existsSync(`${D}/rehearsal.json`)) die("rehearse it first: the summary reports what the rehearsal found.");
   if (existsSync(f) && !a.includes("--replace")) die(`${f} already exists; add --replace to start it again (its written parts would be lost).`);
   const p = payloadOf(name, { preview: role() === "none" });
-  writeFileSync(f, skeleton(name, p, sha(p as Json), latestReviews(name), read<{ relationship?: Relationship }>(`${D}/rehearsal.json`).relationship ?? null));
+  const reh = read<any>(`${D}/rehearsal.json`);
+  writeFileSync(f, skeleton(name, p, sha(p as Json), latestReviews(name), reh.relationship ?? null, crossCheckUnrehearsable(p, reh)));
   console.log(`Summary started in ${f}: write every part marked WRITE, including a response to each blocking and major point.`);
 }
 
@@ -218,7 +219,8 @@ async function approve(name: string) {
   const k = KINDS[p.type ?? "agent.register"]!;
   const signature = k.unsigned ? null : await signJson(signingKey().privateKey, p as Json);
   writeFileSync(`${D}/signed.json`, JSON.stringify(k.unsigned ? { body: p } : { payload: p, signature }, null, 2));
-  writeFileSync(`${D}/approval.json`, JSON.stringify({ payloadHash: h, approvedAt: new Date().toISOString(), by: "Lucy", summarySha256: summaryHash(D), override: opt("--override") ?? null }, null, 2));
+  writeFileSync(`${D}/approval.json`, JSON.stringify({ payloadHash: h, approvedAt: new Date().toISOString(), by: "Lucy", summarySha256: summaryHash(D), override: opt("--override") ?? null,
+    rehearsalOverride: crossCheckUnrehearsable(p, read<any>(`${D}/rehearsal.json`)) ? opt("--rehearsal-override") ?? null : null }, null, 2));
   console.log(`✓ approved and signed ${h.slice(0, 12)}…`);
   if (p.type === "claim") console.log(`  This claim's id will be ecd:${(await hashJson({ p, s: signature } as Json)).slice(0, 16)}`);
   console.log(`  Next, only on Lucy's instruction to send: npm run cx -- file ${name} --live`);

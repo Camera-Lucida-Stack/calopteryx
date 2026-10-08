@@ -11,7 +11,7 @@ import { privateDetails, withholdPrivateLinks } from "../src/calopteryx/privacy.
 import { disclosureProblem, type Relationship } from "../src/calopteryx/relationships.js";
 import { skeleton, signoffProblem } from "../src/calopteryx/signoff.js";
 import { review, standIn, GENERAL, type Review } from "../src/calopteryx/review.js";
-import { fetchLiveLog, privateCopy, signer, rehearseOne, offline, LOG_FIXTURE_ENV, type LiveEntry } from "../src/calopteryx/rehearse.js";
+import { fetchLiveLog, privateCopy, signer, rehearseOne, offline, LOG_FIXTURE_ENV, rehearsalRefusal, CROSS_CHECK_UNREHEARSABLE, type LiveEntry } from "../src/calopteryx/rehearse.js";
 import { assess } from "../src/calopteryx/relationships.js";
 import { generateKeyPair } from "../src/calopteryx/platform.js";
 
@@ -234,4 +234,38 @@ test("filed items touching Dr Hulme's agents' work are listed for audit; others 
     assert.match(lines[1]!, /"a","review","201","Exuvia Imago"/);
     assert.match(lines[1]!, /would move from unchecked to supported/);
   } finally { process.chdir(here); }
+});
+
+test("a cross-checked result's unrehearsable comparison passes only with Lucy's reasons; every other refusal blocks", () => {
+  const result = { ...base, type: "check.result", commit: "a".repeat(64), outputs: { x: 1 }, crossCheck: { receipt: "b".repeat(64), outputs: { x: 1 } } };
+  const missing = { accepted: false, status: 500, body: { error: CROSS_CHECK_UNREHEARSABLE } };
+  const reasons = "Approved by Lucy: only the live archive holds the earlier receipt's outputs.";
+  // This exact failure: refused without the override, with an empty one, or with another option in its place; passes with reasons.
+  assert.match(rehearsalRefusal(result, missing)!, /--rehearsal-override/);
+  assert.match(rehearsalRefusal(result, missing, " ")!, /--rehearsal-override/);
+  assert.match(rehearsalRefusal(result, missing, "--confirm")!, /--rehearsal-override/);
+  assert.equal(rehearsalRefusal(result, missing, reasons), null);
+  // Any other 500, or the same words at another status, in another kind of item, or without a cross-check: refused even with the override.
+  for (const [p, r] of [
+    [result, { accepted: false, status: 500, body: { error: "internal error" } }],
+    [result, { accepted: false, status: 500, body: { error: CROSS_CHECK_UNREHEARSABLE + "." } }],
+    [result, { accepted: false, status: 500, body: null }],
+    [result, { accepted: false, status: 422, body: { error: CROSS_CHECK_UNREHEARSABLE } }],
+    [{ ...result, type: "check.commit" }, missing],
+    [{ ...result, crossCheck: undefined }, missing],
+  ] as const) {
+    const why = rehearsalRefusal(p, r, reasons);
+    assert.ok(why && /the copy refused it/.test(why) && !/--rehearsal-override/.test(why), JSON.stringify(r));
+  }
+  assert.equal(rehearsalRefusal(result, { accepted: true, status: 201, body: {} }), null);
+
+  // The summary says the comparison could not be rehearsed, and where a result's disclosure is carried.
+  const rel: Relationship = { operator: "op_x", agents: ["Imago"], touches: ["the receipt cross-checked is by Imago"], changes: [] };
+  const text = skeleton("res", result, "f".repeat(64), [], rel, true);
+  assert.match(text, /could not make the cross-check comparison/);
+  assert.match(text, /Only the live archive can compare the outputs/);
+  assert.match(text, /disclosure is carried by the commitment's methods/);
+  assert.doesNotMatch(text, /changed nothing of theirs/);
+  assert.doesNotMatch(skeleton("res", result, "f".repeat(64), [], rel, false), /could not make the cross-check comparison/);
+  assert.match(skeleton("rv", { ...base, type: "review" }, "f".repeat(64), [], rel), /Its text discloses the relationship/);
 });

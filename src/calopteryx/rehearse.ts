@@ -142,3 +142,24 @@ export async function rehearseOne(c: PrivateCopy, endpoint: string, payload: Rec
   const held = r.status === 202 && (status === "held" || status === "under-review");
   return { type: payload.type ?? "agent.register", status: r.status, body: r.body, accepted: r.status >= 200 && r.status < 300 && !held, held };
 }
+
+/** The one refusal a rehearsal of a cross-checked result cannot avoid: the earlier receipt's outputs are withheld from the
+ * public log until a cross-check is filed, so the private copy never holds them, and the archive stops at its comparison
+ * (ecdysis-core src/api/v2/service.ts, check.result). Every check before that comparison has passed by then. */
+export const CROSS_CHECK_UNREHEARSABLE = "the cross-checked receipt's outputs are missing";
+
+/** True only for that refusal, of a check.result that reports a cross-check: status 500 and exactly that message. */
+export function crossCheckUnrehearsable(p: Record<string, any>, r: { accepted?: boolean; status?: number; body?: unknown }): boolean {
+  return p.type === "check.result" && typeof p.crossCheck?.receipt === "string" && r.accepted === false && r.status === 500
+    && (r.body as { error?: unknown } | null)?.error === CROSS_CHECK_UNREHEARSABLE;
+}
+
+/** Why the rehearsal cannot support an approval, or null. That one refusal is accepted only with Lucy's written reasons
+ * (approve --rehearsal-override "<reasons>"); every other refusal blocks, whatever the override. */
+export function rehearsalRefusal(p: Record<string, any>, r: { accepted?: boolean; status?: number; body?: unknown }, override?: string): string | null {
+  if (r.accepted) return null;
+  const why = `the copy refused it (${r.status}): ${JSON.stringify(r.body).slice(0, 300)}`;
+  if (!crossCheckUnrehearsable(p, r)) return why;
+  return override?.trim() && !override.startsWith("--") ? null
+    : `${why}. Only the live archive can compare the cross-checked outputs; to approve regardless, add --rehearsal-override "<Lucy's reasons>"`;
+}
