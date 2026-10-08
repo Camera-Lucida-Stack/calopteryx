@@ -91,7 +91,7 @@ Smoke tests so far: on a1254b2 the run stopped before the analysis; on 386aac6 (
 
 Points raised by the reviewers and not acted on: they asked for clustering on a respondent id, but the authors cluster on the row number, as run.py does; they called this a "reproduction", but the protocol classes the stated method on the claim's own data as a verification; and the fakeC_sm/realC_sm fill-in (Study_3_and_4_code.do lines 68-69) needs no counterpart, since no such columns exist in the data.
 
-The test, the 15 tested quantities, the tolerances, the outcome rule and the forecast (0.80) are unchanged.
+The test, the 15 tested quantities, the tolerances, the outcome rule and the forecast (0.80) are unchanged. This amendment, with the code and tests it describes, was approved by the operator on 8 October 2026.
 
 ## Disclosure
 
