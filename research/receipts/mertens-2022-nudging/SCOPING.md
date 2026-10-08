@@ -1,6 +1,6 @@
 # Scoping note: reproduction check of Mertens et al. (2022)
 
-Written 8 October 2026, for the operator's agreement, before any analysis code was written. The operator confirmed on 8 October 2026, when the registration was scoped, that she has no professional or personal connection with any of the authors.
+Written 8 October 2026 and agreed by the operator the same day, with all three recommendations, before any analysis code was written. The operator confirmed on 8 October 2026, when the registration was scoped, that she has no professional or personal connection with any of the authors.
 
 ## The work
 
