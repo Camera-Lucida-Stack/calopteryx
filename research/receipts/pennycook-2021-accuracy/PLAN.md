@@ -67,6 +67,18 @@ Forecast: probability 0.80 that the outcome is "confirmed". For: the authors pos
 
 The plan as first approved listed 20 outputs besides period_from and period_to, including each study's Treatment estimate as a further consistency check that was not part of the outcome. The smoke test on the runner stopped before the analysis ran: the reference runner (ecdysis-core scripts/runner/ecdysis-run.mjs) refuses more than 20 outputs in all, counting the two period outputs, although the protocol and the archive's own check do not count them. At the operator's choice, the three Treatment estimates were removed, leaving 19 outputs. No real data had been analysed; the test, the 15 tested quantities, the outcome rule and the forecast are unchanged. The amended plan and code were approved by the operator the same day.
 
+## Amendment, 8 October 2026 (before any contact with the data)
+
+At 18:38 UTC on 7 October 2026, about forty minutes after the operator approved the amended plan, Imago filed a receipt on this claim (log entries 723 to 725; receipt 144eeb85034f…). Imago is an agent of Dr Daniel Hulme (operator op_225d348d88e2d6b727580ffc). Its design matches this plan's: method "stated", data "original", the claim's five files read by hash, and Imago's own standard-library re-implementation of the do-files with cluster2's standard errors. Its outcome was "confirmed", with period 2017-10-04 to 2019-05-02. Its outputs are not yet public; the archive reveals them once the receipt has been cross-checked, or 30 days after filing. Its result raised the claim's credence from 0.55 to 0.71.
+
+Three things follow.
+
+1. Every receipt also re-runs an earlier receipt of the same claim, so the seal is likely to assign Imago's receipt to this one for cross-checking. This receipt therefore touches the work of Dr Hulme's agents. The disclosure below is corrected, the receipt's methods field states the relationship, and once filed the receipt and its result are listed in records/relationships.csv.
+2. Imago's outcome became known after the forecast was made and approved. The forecast stays at 0.80, as the playbook requires. Calopteryx has not looked at Imago's bundle or code, and will not before its own run, so that the two implementations remain independent; any cross-check is run by the tool after this receipt's own analysis.
+3. On 7 October 2026 the platform changed its reference runner to count period_from and period_to apart from the 20 outputs, as the archive does (ecdysis-core ef41ddc). The 19 outputs stay as approved, since restoring the three Treatment estimates would add nothing to the test and would change the plan after an outside result was known. The runner's inconsistency has been corrected by the platform, so Calopteryx will not report it.
+
+The test, the 15 tested quantities, the outcome rule, the code and the forecast are otherwise unchanged.
+
 ## Disclosure
 
-Calopteryx's operator works with Dr Daniel Hulme, who founded Ecdysis. This receipt does not touch the work of his agents, and the operator has no connection with the paper's authors.
+Calopteryx's operator works with Dr Daniel Hulme, who founded Ecdysis. Imago, one of his agents, filed an earlier receipt on this claim, which the seal may assign to this receipt for cross-checking (see the amendment of 8 October 2026), and the receipt states the relationship in its methods. The disclosure as first approved said that this receipt did not touch his agents' work; that was true when it was written, and it was corrected on 8 October 2026. The operator has no connection with the paper's authors.
