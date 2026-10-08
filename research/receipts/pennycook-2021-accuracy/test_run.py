@@ -24,8 +24,9 @@ except ImportError:  # the independent check needs them; the bundle never does
     sm = None
 
 
-def write_study(path, items, conditions, n, rng, dates, old_qualtrics=False, bom=True, crlf=True):
-    """A wide file, one row per participant, with the real files' clutter. Returns the expected clean observations."""
+def write_study(path, items, conditions, n, rng, dates, old_qualtrics=False, bom=True, crlf=True, pool_unknown=False):
+    """A wide file, one row per participant, with the real files' clutter. Returns the expected clean observations.
+    pool_unknown: a missing condition stays in as a control (Study 5's do-file), instead of being dropped (Studies 3-4)."""
     head = (["V1", "V8", "V9"] if old_qualtrics else ["ResponseID", "StartDate", "EndDate", "Email"]) + \
         ["Condition", "FB", "SocialMedia_Chk", "Zipcode"]
     for kind in ("Fake", "Real"):
@@ -55,10 +56,10 @@ def write_study(path, items, conditions, n, rng, dates, old_qualtrics=False, bom
                 row[f"{kind}{i}_3"] = cell
                 row[f"{kind}{i}_SM"] = str(rng.randint(1, 6))
                 row[f"{kind}{i}_RT_3"] = f"{rng.random() * 9:.3f}"
-                usable = chk.strip() == "1" and fb != "2" and row["Condition"].strip() in conditions \
-                    and cell.strip() not in ("", "n/a")
+                usable = chk.strip() == "1" and fb != "2" and cell.strip() not in ("", "n/a") \
+                    and (pool_unknown or row["Condition"].strip() in conditions)
                 if usable:
-                    expected.append((cond, real, i, p, (v - 1) / 5))
+                    expected.append((row["Condition"].strip(), real, i, p, (v - 1) / 5))
         rows.append([row.get(h, "") for h in head])
     with open(path, "w", encoding="utf-8-sig" if bom else "utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\r\n" if crlf else "\n")
@@ -81,7 +82,7 @@ class Synthetic(unittest.TestCase):
             "s4": write_study(os.path.join(inputs, "Study_4_data.csv"), 12, ["1", "2"], 320, rng,
                               ["11/28/2017", "11/30/2017"], bom=False),
             "s5": write_study(os.path.join(inputs, "Study_5_data.csv"), 10, ["1", "2", "3", "4"], 400, rng,
-                              ["4/30/2019", "5/1/2019", "5/2/2019"], crlf=False),
+                              ["4/30/2019", "5/1/2019", "5/2/2019"], crlf=False, pool_unknown=True),
         }
         for f in run.CODE_FILES:
             with open(os.path.join(inputs, f), "w") as h:
@@ -100,6 +101,9 @@ class Synthetic(unittest.TestCase):
             self.assertEqual(self.out[f"{s}_n_obs"], len(exp))
             self.assertEqual(self.out[f"{s}_n_participants"], len({e[3] for e in exp}))
             self.assertEqual(self.out[f"{s}_n_headlines"], len({(e[1], e[2]) for e in exp}))
+
+    def test_study_5_keeps_a_missing_condition_as_a_control(self):
+        self.assertTrue(any(e[0] == "" for e in self.expected["s5"]))     # the synthetic data contain such participants
 
     def test_text_in_number_cells_is_counted(self):
         self.assertGreater(self.out["n_unreadable_cells"], 0)
@@ -141,22 +145,28 @@ class Pieces(unittest.TestCase):
     def test_us_dates(self):
         self.assertEqual(run.us_date("10/4/2017 10:00"), 20171004)
         self.assertEqual(run.us_date("11/29/2017"), 20171129)
-        for bad in ("", " ", "2017-10-04", "13/1/2017", "1/1/17"):
-            self.assertIsNone(run.us_date(bad))
+        self.assertEqual(run.us_date("2/29/2016"), 20160229)
+        for bad in ("", " ", "2017-10-04", "13/1/2017", "1/1/17", "2/31/2019", "2/29/2019", "4/31/2018", "0/1/2018",
+                    "1/0/2018"):
+            self.assertIsNone(run.us_date(bad), bad)
 
     def test_destring(self):
         ex = run.Exclusions()
         self.assertIsNone(run.number(" ", ex, "c"))
         self.assertIsNone(run.number("n/a", ex, "c"))
         self.assertIsNone(run.number("nan", ex, "c"))
+        self.assertIsNone(run.number("inf", ex, "c"))
+        self.assertIsNone(run.number("-Infinity", ex, "c"))
         self.assertEqual(run.number(" 3 ", ex, "c"), 3.0)
-        self.assertEqual(ex.counts["unreadable cell in c"], 1)
+        self.assertEqual(ex.counts["unreadable cell in c"], 4)     # n/a, nan, inf and -Infinity; the blank is not
 
     def test_models(self):
         self.assertEqual(run.s34(2, 1), [1.0, 1, 1, 1])
         self.assertIsNone(run.s34(3, 0))
         self.assertEqual(run.s5(4, 1), [1.0, 0.0, 1, 0.0, 1.0, 1.0])
         self.assertEqual(run.s5(2, 1), [1.0, 0.0, 1, 0.0, 0.0, 0.0])
+        for other in (None, 5, 0):                                    # Stata: condition==3 and ==4 are both false
+            self.assertEqual(run.s5(other, 1), [1.0, 0.0, 1, 0.0, 0.0, 0.0])
 
     def test_known_regression(self):
         # y = 1 + 2x exactly: estimates exact, residuals zero, so every variance is zero.
@@ -165,6 +175,120 @@ class Pieces(unittest.TestCase):
         self.assertAlmostEqual(b[0], 1, places=10)
         self.assertAlmostEqual(b[1], 2, places=10)
         self.assertEqual((n, g1, g2), (12, 3, 4))
+
+    def test_zero_variance_gives_a_zero_standard_error(self):
+        # Two exact points per cluster: every residual is zero, so the variance is exactly zero.
+        obs = [([1.0, x], 3.0, i, i) for i, x in enumerate([0.0, 0.0, 1.0, 1.0])]
+        obs = [([1.0, o[0][1]], 1.0 + 2.0 * o[0][1], o[2], o[3]) for o in obs]
+        _, se, *_ = run.cluster2(obs)
+        self.assertEqual(se, [0.0, 0.0])
+
+    def test_non_finite_outputs_are_refused(self):
+        self.assertEqual(run.finite({"a": 1, "b": 0.5}), {"a": 1, "b": 0.5})
+        for bad in (float("nan"), float("inf"), -float("inf"), None, "1"):
+            with self.assertRaises(SystemExit):
+                run.finite({"a": 1, "b": bad})
+
+
+def published():
+    """The published values as run.py's got: every one of the 15 quantities exactly on target."""
+    return {s: dict(t) for s, t in run.TARGETS.items()}
+
+
+class Scoring(unittest.TestCase):
+    def test_all_fifteen_matches_are_recognised(self):
+        self.assertEqual(run.score(published()), 15)
+
+    def test_each_quantity_failing_alone_costs_exactly_one(self):
+        cases = 0
+        for study, t in run.TARGETS.items():
+            for q in ("b", "se", "n_obs", "n_participants", "n_headlines"):
+                got = published()
+                got[study][q] = t[q] * 1.5 if q == "se" else t[q] + (0.001 if q == "b" else 1)
+                self.assertEqual(run.score(got), 14, (study, q))
+                cases += 1
+        self.assertEqual(cases, 15)
+
+    def test_tolerance_boundaries(self):
+        for study, t in run.TARGETS.items():
+            for b, met in ((t["b"] + 0.0001, 15), (t["b"] - 0.0001, 15), (t["b"] + 0.000101, 14),
+                           (t["b"] - 0.000101, 14)):
+                got = published()
+                got[study]["b"] = b
+                self.assertEqual(run.score(got), met, (study, "b", b))
+            for ratio, met in ((1.05, 15), (0.95, 15), (1.0501, 14), (0.9499, 14)):
+                got = published()
+                got[study]["se"] = t["se"] * ratio
+                self.assertEqual(run.score(got), met, (study, "se", ratio))
+
+
+def tiny(path, rows, items=1, old_qualtrics=False):
+    """A minimal study file: rows of (condition, start, end); every participant shares politics and uses Facebook."""
+    start, end = ("V8", "V9") if old_qualtrics else ("StartDate", "EndDate")
+    head = [start, end, "Condition", "FB", "SocialMedia_Chk"] + \
+        [f"{k}{i}_3" for k in ("Fake", "Real") for i in range(1, items + 1)]
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(head)
+        for p, (cond, s, e) in enumerate(rows):
+            w.writerow([s, e, cond, "1", "1"] + [str(1 + (p + i) % 6) for i in range(2 * items)])
+
+
+class Stops(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.saved = run.INPUTS
+        run.INPUTS = self.tmp.name
+
+    def tearDown(self):
+        run.INPUTS = self.saved
+        self.tmp.cleanup()
+
+    def obs(self, rows, model):
+        tiny(os.path.join(self.tmp.name, "f.csv"), rows)
+        ex = run.Exclusions()
+        return run.observations("f.csv", 1, model, ex), ex
+
+    def test_study_5_missing_or_other_condition_is_a_pooled_control_and_counted(self):
+        rows = [("1", "4/30/2019", "4/30/2019"), ("3", "4/30/2019", "4/30/2019"), (" ", "5/1/2019", "5/1/2019"),
+                ("7", "5/1/2019", "5/1/2019")]
+        (obs, _), ex = self.obs(rows, run.s5)
+        self.assertEqual(sorted({o[2] for o in obs}), [0, 1, 2, 3])
+        self.assertEqual([o[0] for o in obs if o[2] in (2, 3)], [[1.0, 0.0, r, 0.0, 0.0, 0.0] for r in (0, 1)] * 2)
+        self.assertEqual(ex.counts["f.csv: condition missing or unknown, kept as a pooled control (not excluded)"], 2)
+
+    def test_studies_3_and_4_drop_a_missing_condition(self):
+        rows = [("1", "10/4/2017", "10/4/2017"), ("2", "10/4/2017", "10/4/2017"), (" ", "10/5/2017", "10/5/2017")]
+        (obs, _), ex = self.obs(rows, run.s34)
+        self.assertEqual(sorted({o[2] for o in obs}), [0, 1])
+        self.assertEqual(ex.counts["f.csv: condition missing or unknown"], 2)      # one per observation
+
+    def test_an_analysed_participant_without_a_start_or_end_date_stops_the_run(self):
+        for s, e in (("", "10/4/2017"), ("10/4/2017", ""), ("2/31/2018", "10/4/2017"), ("10/4/2017", "x")):
+            with self.assertRaises(SystemExit, msg=(s, e)):
+                self.obs([("1", "10/4/2017", "10/4/2017"), ("2", s, e)], run.s34)
+
+    def test_undated_participants_are_counted_once_each(self):
+        # Start missing on one row and end on another: two participants, where the old count gave one.
+        rows = [("1", "", "10/4/2017"), ("2", "10/4/2017", ""), ("1", "10/4/2017", "10/4/2017")]
+        with self.assertRaises(SystemExit) as c:
+            self.obs(rows, run.s34)
+        self.assertIn("2 analysed participant(s)", str(c.exception))
+
+    def test_an_undated_participant_who_is_not_analysed_does_not_stop_the_run(self):
+        (obs, dates), _ = self.obs([("1", "10/4/2017", "10/4/2017"), ("2", "10/4/2017", "10/4/2017"),
+                                     (" ", "", "")], run.s34)
+        self.assertEqual(len(dates), 2)
+
+    def test_no_observations_stops_the_run(self):
+        with self.assertRaises(SystemExit):
+            self.obs([(" ", "10/4/2017", "10/4/2017")], run.s34)
+
+    def test_period_must_lie_within_the_claims(self):
+        self.assertEqual(run.period([(20171001, 20171002), (20190530, 20190531)]), (20171001, 20190531))
+        for dates in ([(20170930, 20171004)], [(20171004, 20190601)], [], [(None, 20171004)], [(20171004, None)]):
+            with self.assertRaises(SystemExit, msg=dates):
+                run.period(dates)
 
 
 if __name__ == "__main__":

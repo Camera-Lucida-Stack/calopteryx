@@ -11,9 +11,13 @@ veracity and their interaction, among participants who say they sometimes share 
 after dropping those who did not finish (socialmedia_chk missing) or do not use Facebook (fb==2). Standard errors are
 cluster2's: V = V(participant) + V(headline) - V(robust), each with Stata's small-sample factor, (N-1)/(N-K) * G/(G-1)
 for a clustered variance and N/(N-K) for the robust one (cluster2 uses the robust variance when every participant-
-headline pair occurs once, as here by construction).
+headline pair occurs once, as here by construction: the participant is the row number, as in the do-files' gen id=_n).
+
+The run stops with no outputs if an analysed participant lacks a valid start or end date, if the dates fall outside the
+claim's period (2017-10 to 2019-05), or if any output is not a finite number.
 """
 import csv
+import datetime
 import json
 import math
 import os
@@ -34,23 +38,28 @@ TARGETS = {
 }
 B_TOLERANCE = 0.0001   # the estimate may differ from the published value by at most this
 SE_TOLERANCE = 0.05    # the SE may differ from the published value by at most this share of it
+PERIOD = (20171001, 20190531)   # the claim's period; the data's earliest start and latest end must lie within it
 
 
 def number(text, exclusions, column):
-    """Stata's destring: blank is missing; text that is not a number is missing too, and counted."""
+    """A blank cell is missing, as with Stata's destring. Any other token that is not a finite number ("n/a", and also
+    "nan" or "inf") is missing here and counted: destring without force would leave such a column unconverted, so a
+    non-zero count marks a point where this script and the authors' Stata run could differ."""
     s = text.strip()
     if s == "":
         return None
     try:
         x = float(s)
     except ValueError:
+        x = None
+    if x is None or not math.isfinite(x):
         exclusions.add(f"unreadable cell in {column}")
         return None
-    return x if math.isfinite(x) else None
+    return x
 
 
 def us_date(text):
-    """'10/4/2017 10:00' or '11/29/2017' as the integer 20171004; None if absent or unreadable."""
+    """'10/4/2017 10:00' or '11/29/2017' as the integer 20171004; None if absent, unreadable or not a real date."""
     s = text.strip().split(" ")[0]
     parts = s.split("/")
     if len(parts) != 3:
@@ -59,7 +68,11 @@ def us_date(text):
         m, d, y = (int(p) for p in parts)
     except ValueError:
         return None
-    if not (1 <= m <= 12 and 1 <= d <= 31 and 2000 <= y <= 2100):
+    if not 2000 <= y <= 2100:
+        return None
+    try:
+        datetime.date(y, m, d)          # refuses 31 February, 29 February outside a leap year, month 13
+    except ValueError:
         return None
     return y * 10000 + m * 100 + d
 
@@ -82,7 +95,7 @@ def observations(name, items, regressors, exclusions):
     for c in ["condition", "fb", "socialmedia_chk", start, end]:
         if c not in header:
             raise SystemExit(f"{name}: no column {c}")
-    obs, dates = [], []
+    obs, dates, undated = [], [], 0
     for pid, row in enumerate(rows):
         chk = number(row["socialmedia_chk"], exclusions, "socialmedia_chk")
         if chk is None:
@@ -112,7 +125,16 @@ def observations(name, items, regressors, exclusions):
                 obs.append((x, (v - 1) / 5, pid, (real, i)))
                 kept += 1
         if kept:
-            dates.append((us_date(row[start]), us_date(row[end])))
+            s, e = us_date(row[start]), us_date(row[end])
+            if s is None or e is None:
+                undated += 1
+            dates.append((s, e))
+            if regressors is s5 and cond not in (1, 2, 3, 4):
+                exclusions.add(f"{name}: condition missing or unknown, kept as a pooled control (not excluded)")
+    if undated:
+        raise SystemExit(f"{name}: {undated} analysed participant(s) lack a valid start or end date; no outputs")
+    if not obs:
+        raise SystemExit(f"{name}: no observations to analyse; no outputs")
     return obs, dates
 
 
@@ -125,9 +147,9 @@ def s34(cond, real):
 
 
 def s5(cond, real):
-    """xi: i.treatment*real i.importance*real, against the pooled passive and active controls (conditions 1 and 2)."""
-    if cond not in (1, 2, 3, 4):
-        return None
+    """xi: i.treatment*real i.importance*real, with treatment = condition==3 and importance = condition==4
+    (Study_5_code.do lines 62-63). In Stata a missing or other condition makes both zero, so that participant stays in
+    as a pooled control alongside conditions 1 and 2; never None."""
     t, m = float(cond == 3), float(cond == 4)
     return [1.0, t, real, t * real, m, m * real]
 
@@ -180,12 +202,40 @@ def cluster2(obs):
 
     v_id, n_id = clustered(lambda o: o[2])
     v_item, n_item = clustered(lambda o: o[3])
-    if len({(o[2], o[3]) for o in obs}) != n:
-        raise SystemExit("a participant-headline pair occurs twice; cluster2 would cluster on the pair")
     v_rob = sandwich(a, outer_sum(scores, k), n / (n - k))
     v = [[v_id[i][j] + v_item[i][j] - v_rob[i][j] for j in range(k)] for i in range(k)]
-    se = [math.sqrt(v[i][i]) if v[i][i] > 0 else float("nan") for i in range(k)]
+    se = [math.sqrt(v[i][i]) if v[i][i] >= 0 else float("nan") for i in range(k)]
     return b, se, n, n_id, n_item
+
+
+def score(got):
+    """How many of the 15 tested quantities meet the claim's test: got[study] holds b, se and the three counts."""
+    met = 0
+    for study, t in TARGETS.items():
+        g = got[study]
+        met += at_most(abs(g["b"] - t["b"]), B_TOLERANCE)
+        met += at_most(abs(g["se"] / t["se"] - 1), SE_TOLERANCE)
+        met += sum(g[c] == t[c] for c in ("n_obs", "n_participants", "n_headlines"))
+    return met
+
+
+def period(dates):
+    """The earliest start and the latest end, which must lie within the claim's period; otherwise no outputs."""
+    starts, ends = [s for s, _ in dates if s is not None], [e for _, e in dates if e is not None]
+    if not starts or not ends or len(starts) != len(dates) or len(ends) != len(dates):
+        raise SystemExit("an analysed participant lacks a valid start or end date; no outputs")
+    lo, hi = min(starts), max(ends)
+    if lo < PERIOD[0] or hi > PERIOD[1]:
+        raise SystemExit(f"the data run from {lo} to {hi}, outside the claim's period {PERIOD}; no outputs")
+    return lo, hi
+
+
+def finite(out):
+    """Refuses any output that is not a finite number, before anything is written."""
+    bad = sorted(k for k, v in out.items() if not (isinstance(v, (int, float)) and math.isfinite(v)))
+    if bad:
+        raise SystemExit(f"outputs not finite: {', '.join(bad)}; no outputs")
+    return out
 
 
 def main():
@@ -193,32 +243,26 @@ def main():
         if not os.path.exists(os.path.join(INPUTS, f)):
             raise SystemExit(f"input missing: {f}")
     ex = Exclusions()
-    out, dates, met = {}, [], 0
+    out, dates, got = {}, [], {}
     for study, name, items, model in [("s3", "Study_3_data.csv", 12, s34), ("s4", "Study_4_data.csv", 12, s34),
                                       ("s5", "Study_5_data.csv", 10, s5)]:
         obs, d = observations(name, items, model, ex)
         dates += d
         b, se, n, n_id, n_item = cluster2(obs)
-        got = {"b": b[3], "se": se[3], "n_obs": n, "n_participants": n_id, "n_headlines": n_item}
+        got[study] = {"b": b[3], "se": se[3], "n_obs": n, "n_participants": n_id, "n_headlines": n_item}
         out[f"{study}_b_txv"] = round(b[3], 10)
         out[f"{study}_se_txv"] = round(se[3], 10)
         out[f"{study}_n_obs"] = n
         out[f"{study}_n_participants"] = n_id
         out[f"{study}_n_headlines"] = n_item
-        t = TARGETS[study]
-        met += at_most(abs(got["b"] - t["b"]), B_TOLERANCE)
-        met += at_most(abs(got["se"] / t["se"] - 1), SE_TOLERANCE)
-        met += sum(got[c] == t[c] for c in ("n_obs", "n_participants", "n_headlines"))
-    out["targets_met"] = met
+    out["targets_met"] = score(got)
     out["n_unreadable_cells"] = sum(v for r, v in ex.counts.items() if r.startswith("unreadable cell"))
-    starts = [s for s, _ in dates if s is not None]
-    ends = [e for _, e in dates if e is not None]
-    out["period_from"], out["period_to"] = min(starts), max(ends)
+    out["period_from"], out["period_to"] = period(dates)
+    finite(out)
     os.makedirs(RESULTS, exist_ok=True)
     with open(os.path.join(RESULTS, "outputs.json"), "w") as f:
         json.dump(out, f, indent=1, sort_keys=True)
-    print(json.dumps({"exclusions": ex.report(), "undated participants": len(dates) - min(len(starts), len(ends))},
-                     indent=1), file=sys.stderr)
+    print(json.dumps({"exclusions": ex.report()}, indent=1), file=sys.stderr)
 
 
 if __name__ == "__main__":
