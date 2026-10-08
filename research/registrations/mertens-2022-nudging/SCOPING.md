@@ -1,14 +1,14 @@
 # Scoping note: registering Mertens, Herberz, Hahnel and Brosch (2022) on the effectiveness of nudging
 
-Written 8 October 2026, for the operator's agreement. The operator chose consumer behaviour as the topic and this paper as one of three to take up, and confirmed on 8 October 2026 that she has no professional or personal connection with any of its authors.
+Written 8 October 2026 and agreed by the operator the same day, before any draft was written. Order agreed: nudging, defaults, choice overload. The operator chose consumer behaviour as the topic and this paper as one of three to take up, and confirmed on 8 October 2026 that she has no professional or personal connection with any of its authors.
 
 ## The work
 
 Register the central claim of Mertens, S., Herberz, M., Hahnel, U. J. J. and Brosch, T. (2022), "The effectiveness of nudging: A meta-analysis of choice architecture interventions across behavioral domains", Proceedings of the National Academy of Sciences 119(1), e2107346118, doi:10.1073/pnas.2107346118, as corrected by "Correction for Mertens et al.", PNAS 119(19), e2204059119, doi:10.1073/pnas.2204059119 (4 May 2022). A reproduction check may follow, scoped separately.
 
-**The correction changes the claim.** It removed four observations from a retracted study (Shu et al., 2012), fixed two wrong values and some coding errors, and revised the headline figures. The original abstract reported "a small to medium effect size of Cohen's d = 0.45 (95% CI [0.39, 0.52])"; the correction replaces this with "Cohen's d = 0.43 (95% CI [0.38, 0.48])" and the sample with "440 effect sizes (n = 2,148,439)". Calopteryx registers the corrected claim, citing both the paper and the correction.
+**The correction changes the claim.** It removed four observations from a retracted study (Shu et al., 2012), fixed two wrong values and some coding errors, and revised the headline figures. The original abstract reported "a small to medium effect size of Cohen's d = 0.45 (95% CI [0.39, 0.52])"; the correction replaces this with "Cohen's d = 0.43 (95% CI [0.38, 0.48])" and the sample with "440 effect sizes (n = 2,148,439)". Calopteryx registers the corrected claim, citing both the paper and the correction (the operator's choice, 8 October 2026).
 
-The corrected Results state: "Our meta-analysis of 447 effect sizes from 212 publications (n = 2, 148, 439) revealed a statistically significant effect… (Cohen's d = 0.43, 95% CI [0.38, 0.48], t(333) = 16.51, P < 0.001)". The corrected paper gives 440 effect sizes in its abstract and 447 in its results and Table 2; the posted data have 447 rows. This inconsistency is noted in the registration's scope, and the registration quotes the figure the posted data support.
+The corrected Results state: "Our meta-analysis of 447 effect sizes from 212 publications (n = 2, 148, 439) revealed a statistically significant effect… (Cohen's d = 0.43, 95% CI [0.38, 0.48], t(333) = 16.51, P < 0.001)". The corrected paper gives 440 effect sizes in its abstract and 447 in its results and Table 2; the posted data have 447 rows. This inconsistency is noted in the registration's scope, and the registration quotes the corrected Results sentence (447 effect sizes), which matches the posted data (the operator's choice, 8 October 2026), noting the abstract's 440 in its scope.
 
 These quotations were taken from Europe PMC's full text and the correction notice; every character is checked against the published versions before anything is drafted.
 

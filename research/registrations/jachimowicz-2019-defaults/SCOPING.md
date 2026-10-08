@@ -1,6 +1,6 @@
 # Scoping note: registering Jachimowicz, Duncan, Weber and Johnson (2019) on default effects
 
-Written 8 October 2026, for the operator's agreement. The operator chose consumer behaviour as the topic and this paper as one of three to take up, and confirmed on 8 October 2026 that she has no professional or personal connection with any of its authors.
+Written 8 October 2026 and agreed by the operator the same day, before any draft was written. Order agreed: nudging, defaults, choice overload. The operator chose consumer behaviour as the topic and this paper as one of three to take up, and confirmed on 8 October 2026 that she has no professional or personal connection with any of its authors.
 
 ## The work
 
