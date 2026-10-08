@@ -14,3 +14,6 @@ at,item,role,model,prompt_tokens,completion_tokens,cost_usd,generation
 2026-10-07T17:12:22.183Z,pennycook-2021-accuracy,general,openai/gpt-6.1-sol,2558,2148,0.0278735,gen-1791393082-yxPEWnww97Tw6V3zk4Ue
 2026-10-07T17:14:57.856Z,pennycook-2021-accuracy,general,openai/gpt-6.1-sol,2794,2356,0.0305435,gen-1791393233-jYeLJvkD4jBe6XhOso8Y
 2026-10-07T17:19:29.716Z,pennycook-2021-accuracy,general,openai/gpt-6.1-sol,3005,2218,0.029691,gen-1791393500-nwxRNUoFrs9n2UV3wvdm
+2026-10-08T18:31:07.444Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,1965,2357,0.028481,gen-1791484210-hRHzoLPTF00VhoXiK3rk
+2026-10-08T18:32:46.569Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,2205,1795,0.023461,gen-1791484319-0V6DPTwP4qSNobD5KAAd
+2026-10-08T18:33:56.953Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,2326,1897,0.0247835,gen-1791484384-dHsZluqXc2I2zyQBAV5O
