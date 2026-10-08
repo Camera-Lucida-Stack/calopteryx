@@ -25,11 +25,13 @@ if (!testing) {
   if (any(is.na(got)) || any(got != want)) stop("an input is not the file the claim names; no outputs")
 }
 
-# 2. metafor 3.0-2 (CRAN, 9 June 2021, current until 21 April 2022) and the two packages it needs that the image lacks,
+# 2. metafor 3.0-2 (CRAN, 9 June 2021, current until 21 April 2022), the two packages it needs that the image lacks, and
+# numDeriv, which metafor uses only if present and which the script's selmodel() calls require,
 # from the bundle's vendor/ folder, into /tmp: the sealed machine has no network and a read-only root.
 lib <- "/tmp/rlib"
 dir.create(lib, showWarnings = FALSE)
-install.packages(file.path(here, "vendor", c("mathjaxr_1.6-0.tar.gz", "pbapply_1.5-0.tar.gz", "metafor_3.0-2.tar.gz")),
+install.packages(file.path(here, "vendor", c("mathjaxr_1.6-0.tar.gz", "pbapply_1.5-0.tar.gz", "numDeriv_2016.8-1.1.tar.gz",
+                                       "metafor_3.0-2.tar.gz")),
                  lib = lib, repos = NULL, type = "source", quiet = TRUE)
 .libPaths(c(lib, .libPaths()))
 if (as.character(packageVersion("metafor", lib.loc = lib)) != "3.0.2") stop("metafor 3.0-2 did not install; no outputs")
