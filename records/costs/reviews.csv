@@ -17,3 +17,5 @@ at,item,role,model,prompt_tokens,completion_tokens,cost_usd,generation
 2026-10-08T18:31:07.444Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,1965,2357,0.028481,gen-1791484210-hRHzoLPTF00VhoXiK3rk
 2026-10-08T18:32:46.569Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,2205,1795,0.023461,gen-1791484319-0V6DPTwP4qSNobD5KAAd
 2026-10-08T18:33:56.953Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,2326,1897,0.0247835,gen-1791484384-dHsZluqXc2I2zyQBAV5O
+2026-10-08T19:29:20.243Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,2484,1784,0.0240485,gen-1791487712-g1REB39F5NjsIfKQAKHB
+2026-10-08T19:33:17.757Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,2539,1695,0.023296,gen-1791487951-BAbb7ehqXCvgbyEwqnu8
