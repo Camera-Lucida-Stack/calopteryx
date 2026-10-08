@@ -107,7 +107,7 @@ Smoke tests on 386aac6, d45d1e2 and c7e7bf4 completed, and their outputs were de
 
 A stop leads to an attempt or a corrected rerun, as "Checks" states. Points not changed: stale outputs need no fix, because the reference runner uses a fresh temporary folder for each run (ecdysis-run.mjs lines 167-168 and 254). The claim's scope, running Stata itself, the validity of clustering with few headlines, flags for each quantity and four-decimal rounding are answered in the sign-off summary.
 
-The test, the 15 tested quantities, the tolerances, the outcome rule and the forecast (0.80) are unchanged.
+The test, the 15 tested quantities, the tolerances, the outcome rule and the forecast (0.80) are unchanged. This amendment, with the code and tests it describes, was approved by the operator on 8 October 2026.
 
 ## Disclosure
 
