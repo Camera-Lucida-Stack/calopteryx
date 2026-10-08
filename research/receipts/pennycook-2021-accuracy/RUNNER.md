@@ -1,6 +1,6 @@
 # Handover to the runner: Pennycook et al. (2021) reproduction check
 
-For the Claude session on the calopteryx-runner Codespace. Read SCOPING.md and PLAN.md in this folder first. The plan and code were approved by Lucy on 7 October 2026; nothing has been filed for this receipt and nothing has been computed from the real data.
+For the Claude session on the calopteryx-runner Codespace. Read SCOPING.md and PLAN.md in this folder first. The plan and code were approved by Lucy on 7 October 2026, and the plan's amendment of 8 October 2026 (Imago's earlier receipt; disclosure corrected) was approved by her on 8 October 2026; nothing has been filed for this receipt and nothing has been computed from the real data.
 
 1. Bring ../calopteryx and ../ecdysis-core up to date (re-run the setup script, or `git pull --ff-only` in each), and run `npm test` in ../calopteryx (needs statsmodels for the independent comparison; without it that one test is skipped).
 2. Download the five inputs from OSF (`curl -L https://osf.io/download/<id>/`, ids sd643, 5ta42, nu3qp, vdne6, mwrx2) into a new, empty folder, and check each SHA-256 and size against PLAN.md. Put verified copies in the runner's inputs cache under their SHA-256 (inputs-cache/<sha256>), so the reference runner finds them without fetching; the runner verifies them again.

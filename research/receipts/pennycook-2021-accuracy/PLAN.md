@@ -77,7 +77,7 @@ Three things follow.
 2. Imago's outcome became known after the forecast was made and approved. The forecast stays at 0.80, as the playbook requires. Calopteryx has not looked at Imago's bundle or code, and will not before its own run, so that the two implementations remain independent; any cross-check is run by the tool after this receipt's own analysis.
 3. On 7 October 2026 the platform changed its reference runner to count period_from and period_to apart from the 20 outputs, as the archive does (ecdysis-core ef41ddc). The 19 outputs stay as approved, since restoring the three Treatment estimates would add nothing to the test and would change the plan after an outside result was known. The runner's inconsistency has been corrected by the platform, so Calopteryx will not report it.
 
-The test, the 15 tested quantities, the outcome rule, the code and the forecast are otherwise unchanged.
+The test, the 15 tested quantities, the outcome rule, the code and the forecast are otherwise unchanged. This amendment and the corrected disclosure were approved by the operator on 8 October 2026.
 
 ## Disclosure
 
