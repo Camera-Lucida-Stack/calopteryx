@@ -69,5 +69,7 @@ for (d in names(truth)) {
 }
 check(out$mismatches > 0, "synthetic data do not meet the published targets (the comparison can fail)")
 
+if (dir.exists("/keep")) file.copy(c(csv, file.path(res, "outputs.json")), "/keep", overwrite = TRUE)   # see test.sh
+
 cat(if (failures == 0) "\nall tests passed\n" else sprintf("\n%d test(s) FAILED\n", failures))
 quit(status = if (failures == 0) 0 else 1)

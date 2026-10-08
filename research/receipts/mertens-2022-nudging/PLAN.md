@@ -42,7 +42,7 @@ All are in OSF project fywae. The corrections file is listed because it is part 
 
 run.R, run from the checkout's root as `Rscript research/receipts/mertens-2022-nudging/run.R`, does the following and nothing else.
 
-1. Checks the two inputs it uses against their fingerprints, installs the three vendored packages into /tmp and confirms that metafor 3.0-2 loaded.
+1. Checks the two inputs it uses against their fingerprints, installs the four vendored packages into /tmp and confirms that metafor 3.0-2 loaded.
 2. Sets R's random seed from ECDYSIS_SEED (its first seven hexadecimal digits). Nothing in the parts of the script the test uses is random; the seed is set so that, if anything is, it comes from the archive's seed only.
 3. Copies the corrected data into a writable folder under /tmp and runs the authors' script there, unchanged, from its first line to its last. The script reads its data by name from the folder it runs in, which is why it runs in a copy of that folder. Two things are changed around it, neither inside it: the script's eight View() calls, which open a spreadsheet window that a sealed machine does not have and would otherwise stop the run, do nothing; and its plots go to no file.
 4. If the script stops with an error after both named models exist, the comparison still goes ahead and script_completed is 0; if it stops before then, there is nothing to compare, and run.R writes no outputs.

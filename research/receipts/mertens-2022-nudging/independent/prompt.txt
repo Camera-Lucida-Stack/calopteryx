@@ -1,0 +1,36 @@
+You are writing an independent implementation of two meta-analytic models, to be compared with another
+implementation that you will not see. Work only from the specification below, which is an extract from a
+pre-registration. The models are those of the R package metafor, version 3.0-2: implement what that version computes,
+from your own knowledge of its documented methods.
+
+SPECIFICATION (extract):
+## Method
+
+run.R, run from the checkout's root as `Rscript research/receipts/mertens-2022-nudging/run.R`, does the following and nothing else.
+
+1. Checks the two inputs it uses against their fingerprints, installs the four vendored packages into /tmp and confirms that metafor 3.0-2 loaded.
+2. Sets R's random seed from ECDYSIS_SEED (its first seven hexadecimal digits). Nothing in the parts of the script the test uses is random; the seed is set so that, if anything is, it comes from the archive's seed only.
+3. Copies the corrected data into a writable folder under /tmp and runs the authors' script there, unchanged, from its first line to its last. The script reads its data by name from the folder it runs in, which is why it runs in a copy of that folder. Two things are changed around it, neither inside it: the script's eight View() calls, which open a spreadsheet window that a sealed machine does not have and would otherwise stop the run, do nothing; and its plots go to no file.
+4. If the script stops with an error after both named models exist, the comparison still goes ahead and script_completed is 0; if it stops before then, there is nothing to compare, and run.R writes no outputs.
+5. Reads the seven figures from the two named models, finding each row by its coefficient's name (compare.R): primary_robust's intercept ("intrcpt"), and domain_robust's six rows "factor(domain)health", "factor(domain)food", "factor(domain)environment", "factor(domain)finance", "factor(domain)pro-social" and "factor(domain)other" (the data's own labels). The domain model has no intercept and its year term is centred (scale(year)), so each domain row is that domain's estimate at the mean publication year, which is what Table 2 reports; the year coefficient is not compared. A missing name stops the run with no outputs.
+6. Rounds each estimate and each 95% CI limit half away from zero to two decimals (R's own round() rounds half to even, so it is not used) and compares the 21 numbers with Table 2, as compare.R does.
+
+
+
+THE TWO MODELS, as the authors' script fits them:
+  primary <- rma.mv(cohens_d, variance_d, data = df, random = ~ 1 | publication_id/es_id, tdist = TRUE)
+  primary_robust <- robust(primary, cluster = df$study_id)
+  domain <- rma.mv(cohens_d, variance_d, mods = ~ factor(domain) + scale(year) - 1, data = df,
+                   random = ~ 1 | publication_id/es_id, tdist = TRUE)
+  domain_robust <- robust(domain, cluster = df$study_id, adjust = TRUE)
+rma.mv uses restricted maximum likelihood by default.
+
+WHAT TO WRITE: one Python 3 program using only the standard library, numpy and scipy. It takes two arguments, the path
+of a CSV file and the path of a JSON file to write. The CSV may begin with a byte-order mark and may have Windows line
+ends; its columns include publication_id, study_id, es_id, year, domain (text: health, food, environment, finance,
+pro-social, other), cohens_d and variance_d (variance_d may be written in E notation), and other columns to ignore;
+missing values are written NA. Write a JSON object with: k_primary, k_domain, and for each figure in overall, health,
+food, environment, finance, prosocial, other: est_<figure> and hw_<figure>, where hw is half the width of the 95%
+confidence interval of the cluster-robust result. Also report sigma2_primary (the two variance components) for
+diagnosis. No randomness. Reply with the program only, in one ```python block, then a short list of any assumptions
+you made about what metafor 3.0-2 computes.
