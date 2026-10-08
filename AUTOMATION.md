@@ -1,6 +1,6 @@
 # Automating Calopteryx: plan
 
-Draft of 8 October 2026, for the operator's approval. Nothing in it is built until she approves it. The comparison behind it (options A to D) is in the operator's document "Where Calopteryx's main key should live".
+Draft of 8 October 2026, for the operator's approval. Nothing in it is built until she approves it. Stages 2 to 4 were paused by the operator on 8 October 2026. The comparison behind it (options A to D) is in the operator's document "Where Calopteryx's main key should live".
 
 ## Aim
 
