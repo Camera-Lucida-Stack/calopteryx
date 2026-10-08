@@ -6,7 +6,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import type { Review } from "./review.js";
-import { DISCLOSURE_FIELD, type Relationship } from "./relationships.js";
+import { DISCLOSURE_FIELD, EARLIER_RULES, type Relationship } from "./relationships.js";
 
 export const WRITE = "<!-- WRITE";
 export const SIGNOFF = "SIGNOFF.md";
@@ -52,12 +52,15 @@ const weighty = (reviews: Review[]) => reviews.flatMap((r) => r.issues.map((x, i
 /** For a cross-checked result whose comparison only the live archive can make (rehearse.ts, crossCheckUnrehearsable). */
 const UNREHEARSABLE = "The private rehearsal could not make the cross-check comparison. The earlier receipt's outputs are withheld from the public log until a cross-check is filed, so the private copy cannot hold them, and the copy stopped at that comparison (status 500, \"the cross-checked receipt's outputs are missing\"). Every check before it passed. Only the live archive can compare the outputs, so whether they match, and what this item will change, is known only once it is filed. Approval needs Lucy's written reasons for accepting this (--rehearsal-override).";
 
-function relationshipNote(rel: Relationship | null, type: string, unrehearsable: boolean): string {
+function relationshipNote(rel: Relationship | null, type: string, unrehearsable: boolean, earlier: boolean): string {
   if (!rel) return "The rehearsal did not record Dr Hulme's agents; rehearse again before approval.";
   const who = `Dr Hulme's agents on the record when this was rehearsed (operator ${rel.operator}): ${rel.agents.join(", ") || "none"}.`;
   if (!rel.touches.length) return `${who} This item does not touch their work.`;
   const changed = unrehearsable ? " What it would change for their work could not be rehearsed (see above)."
     : rel.changes.length ? ` In the rehearsal, ${rel.changes.join("; ")}.` : " In the rehearsal it changed nothing of theirs.";
+  if (!earlier) return `${who} This item touches their work: ${rel.touches.join("; ")}.${changed} ${DISCLOSURE_FIELD[type]
+    ? `Its ${DISCLOSURE_FIELD[type]} must state the relationship in one line; the tool does not check this, so confirm it before approving.`
+    : "This item has no free text, so the one-line disclosure is carried by the item it follows from (for a result, the commitment's methods)."}`;
   const disclosed = DISCLOSURE_FIELD[type] ? "Its text discloses the relationship"
     : "This item has no free text, so the disclosure is carried by the commitment's methods";
   return `${who} This item touches their work: ${rel.touches.join("; ")}.${changed} ${disclosed}, and once filed it is listed in records/relationships.csv. It was chosen by the same criteria as any other work, and is approved on its method and wording alone.`;
@@ -91,7 +94,7 @@ ${points || "Neither review raised a blocking or major point."}
 ${minors.length ? `\nMinor points, for information:\n\n${minors.map(({ x, tag }) => `- [${tag}] ${x.problem}`).join("\n")}\n` : ""}
 ${unrehearsable ? `## The rehearsal\n\n${UNREHEARSABLE}\n\n` : ""}## Dr Hulme's agents
 
-${relationshipNote(rel, type, unrehearsable)}
+${relationshipNote(rel, type, unrehearsable, EARLIER_RULES.has(name))}
 
 ## 3. What was already known
 

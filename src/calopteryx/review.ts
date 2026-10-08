@@ -12,7 +12,9 @@ export const GENERAL: Reviewer = { role: "general", model: "openai/gpt-6.1-sol",
 // Grok 4.7 replaced DeepSeek V4 Pro on 6 October 2026 under a rule agreed in advance (PLAYBOOK.md, Statistical practice 6).
 export const STATISTICS: Reviewer = { role: "statistics", model: "x-ai/grok-4.7", name: "xAI Grok 4.7" };
 /** Receipts and new research claims always receive the statistics review. */
-export const STATISTICS_REQUIRED = new Set(["check.commit", "check.result", "claim"]);
+/** Replications and new analyses (PLAYBOOK.md, "Checks for each item"): receipts and their results, and new claims other than conceptual ones. */
+export const needsStatistics = (p: Record<string, any>) =>
+  p.type === "check.commit" || p.type === "check.result" || (p.type === "claim" && p.kind !== "conceptual");
 export const COST_LOG = "records/costs/reviews.csv";
 
 export interface Issue { severity: "blocking" | "major" | "minor"; nature: "clear error" | "judgement call"; location: string; problem: string; fix: string }

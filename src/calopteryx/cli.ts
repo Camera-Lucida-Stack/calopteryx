@@ -26,10 +26,10 @@ import { canonicalize, hashJson, signJson, API, RUNNER, PROTOCOL, type Json } fr
 import { KINDS, problems } from "./kinds.js";
 import { role, signingKey, keygen } from "./keys.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, logSource, rehearsalRefusal, crossCheckUnrehearsable, type Tier } from "./rehearse.js";
-import { assess, disclosureProblem, AUDIT_LOG, type Relationship } from "./relationships.js";
+import { assess, disclosureProblem, AUDIT_LOG, EARLIER_RULES, type Relationship } from "./relationships.js";
 import { privateDetails, withholdPrivateLinks } from "./privacy.js";
 import { skeleton, signoffProblem, summaryHash, SIGNOFF } from "./signoff.js";
-import { GENERAL, STATISTICS, STATISTICS_REQUIRED, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
+import { GENERAL, STATISTICS, needsStatistics, attachmentsOf, review as runReview, standIn, costReport, type Review } from "./review.js";
 
 export const HANDLE = "Calopteryx";
 // The models field names only the models that did the work. The platform uses it to judge independence across model
@@ -115,12 +115,13 @@ const GATES: Gate[] = [
     for (const x of last.attachments) if (attachmentsOf([x.path])[0]!.sha256 !== x.sha256) return `the attachment ${x.path} has changed since the review`;
     const roles = last.reviews.map((r) => r.reviewer.role);
     if (!roles.includes("general")) return "the general review is missing";
-    if (STATISTICS_REQUIRED.has(p.type) && !roles.includes("statistics")) return "the statistics review is required for receipts and new research claims";
+    if (needsStatistics(p) && !roles.includes("statistics")) return "the statistics review is required for replications and new analyses";
     const blocking = last.reviews.flatMap((r) => r.issues.filter((i) => i.severity === "blocking"));
     return blocking.length && !opt("--override") ? `${blocking.length} blocking issue(s) remain; revise and review once more, or approve with --override "<Lucy's reasons>"` : null;
   } },
   { name: "the sign-off summary", run: (n, _p, h) => signoffProblem(`outbox/${n}`, h, latestReviews(n)) },
-  { name: "disclosure of the relationship with Dr Hulme", run: (n, p) => {
+  { name: "disclosure of the relationship with Dr Hulme (the receipt begun under the earlier rules only)", run: (n, p) => {
+    if (!EARLIER_RULES.has(n)) return null;
     const rel = read<{ relationship?: Relationship }>(`outbox/${n}/rehearsal.json`).relationship;
     return rel ? disclosureProblem(p, rel) : "the rehearsal predates the disclosure check; rehearse it again";
   } },
@@ -161,7 +162,7 @@ async function review(name: string) {
     if (rounds.length >= 2) die("this item has had its review and its second round; a further round needs --round-reason \"<why>\" (recorded).");
   }
   const att = attachmentsOf(Array.isArray(draft.attachments) ? draft.attachments : []);
-  const who = [GENERAL, ...(STATISTICS_REQUIRED.has(p.type) || a.includes("--stats") ? [STATISTICS] : [])];
+  const who = [GENERAL, ...(needsStatistics(p) || a.includes("--stats") ? [STATISTICS] : [])];
   const call = STAND_IN() ? standIn() : undefined;
   console.log(`Reviewing ${name} with ${who.map((r) => r.name).join(" and ")}${call ? " (stand-in reviewer: no cost)" : ""}…`);
   const reviews = await Promise.all(who.map((r) => runReview(r, p, String(draft.context ?? ""), att, { label: name, ...(call ? { call } : {}) })));
@@ -199,7 +200,7 @@ async function rehearse(names: string[]) {
     writeFileSync(`${dir(n)}/rehearsal.json`, JSON.stringify({ payloadHash: r === "none" ? null : sha(p as Json), liveEntries: copy.size, source,
       standIn: key?.standIn ?? null, tier, at: new Date().toISOString(), ...res, relationship }, null, 2));
     console.log(`${res.accepted ? "✓" : "✗"} ${n} (${res.type}): ${res.held ? "202, held by screening" : res.status} ${JSON.stringify(res.body).slice(0, 400)}`);
-    console.log(`  Dr Hulme's agents now: ${relationship.agents.join(", ") || "none"}. ${relationship.touches.length ? `Touches their work: ${relationship.touches.join("; ")}${relationship.changes.length ? `; in the copy, ${relationship.changes.join("; ")}` : ""}. The relationship must be disclosed.` : "Does not touch their work."}`);
+    console.log(`  Dr Hulme's agents now: ${relationship.agents.join(", ") || "none"}. ${relationship.touches.length ? `Touches their work: ${relationship.touches.join("; ")}${relationship.changes.length ? `; in the copy, ${relationship.changes.join("; ")}` : ""}. Its text must state the relationship in one line.` : "Does not touch their work."}`);
     if (!res.accepted) { process.exitCode = 1; break; }
   }
   if (r === "none") console.log("(Preview only: this machine holds no key, so these rehearsals cannot count towards an approval.)");
@@ -227,8 +228,9 @@ async function approve(name: string) {
   record(name);
 }
 
-// Every filed item that touches work by Dr Hulme's agents is listed, so the pattern of that work can be audited.
+// A filed item begun under the earlier rules that touches work by Dr Hulme's agents is listed, as those rules required.
 export function auditRelationship(name: string, p: Record<string, any>, status: number) {
+  if (!EARLIER_RULES.has(name)) return;
   const f = `outbox/${name}/rehearsal.json`;
   const rel = existsSync(f) ? read<{ relationship?: Relationship }>(f).relationship : undefined;
   if (!rel?.touches.length) return;

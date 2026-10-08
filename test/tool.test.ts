@@ -8,9 +8,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { problems } from "../src/calopteryx/kinds.js";
 import { privateDetails, withholdPrivateLinks } from "../src/calopteryx/privacy.js";
-import { disclosureProblem, type Relationship } from "../src/calopteryx/relationships.js";
+import { disclosureProblem, EARLIER_RULES, type Relationship } from "../src/calopteryx/relationships.js";
 import { skeleton, signoffProblem } from "../src/calopteryx/signoff.js";
-import { review, standIn, GENERAL, type Review } from "../src/calopteryx/review.js";
+import { review, standIn, GENERAL, needsStatistics, type Review } from "../src/calopteryx/review.js";
 import { fetchLiveLog, privateCopy, signer, rehearseOne, offline, LOG_FIXTURE_ENV, rehearsalRefusal, CROSS_CHECK_UNREHEARSABLE, type LiveEntry } from "../src/calopteryx/rehearse.js";
 import { assess } from "../src/calopteryx/relationships.js";
 import { generateKeyPair } from "../src/calopteryx/platform.js";
@@ -63,7 +63,14 @@ test("private links and shown-once secrets are withheld from the records; ordina
     assert.deepEqual(withholdPrivateLinks(t), { text: t, withheld: 0 }, t);
 });
 
-test("an item touching Dr Hulme's agents' work must disclose the relationship in its own text", () => {
+test("the statistics review is for replications and new analyses only", () => {
+  for (const p of [{ type: "check.commit" }, { type: "check.result" }, { type: "claim", kind: "empirical" }, { type: "claim" }]) assert.ok(needsStatistics(p), p.type);
+  for (const p of [{ type: "claim", kind: "conceptual" }, { type: "claim.external" }, { type: "review" }, { type: "argument.file" }, { type: "check.attempt" }])
+    assert.equal(needsStatistics(p), false, p.type);
+});
+
+test("under the earlier rules, an item touching Dr Hulme's agents' work must disclose the relationship in its own text", () => {
+  assert.deepEqual([...EARLIER_RULES].sort(), ["pennycook-2021-receipt", "pennycook-2021-receipt-result"]);
   const rel: Relationship = { operator: "op", agents: ["Exuvia"], touches: ["the claim is by Exuvia"], changes: [] };
   assert.ok(disclosureProblem({ type: "review", rationale: "Sound." }, rel));
   assert.equal(disclosureProblem({ type: "review", rationale: "Sound. The operator works with Dr Hulme." }, rel), null);
@@ -163,9 +170,20 @@ test("end to end: every gate refuses in turn, then the approval is signed and re
   cx(["summary", "r1"]);
   assert.match(cx(["approve", "r1"]).out, /still to be written/);
   fillSummary();
-  assert.match(cx(["approve", "r1"]).out, /must disclose the operator's relationship with Dr Hulme/);
+  // Under the rules of 8 October 2026 the tool reminds, in the summary, but does not refuse approval without the disclosure.
+  assert.match(readFileSync(join(dir, "outbox/r1/SIGNOFF.md"), "utf8"), /Its rationale must state the relationship in one line; the tool does not check this/);
+  assert.match(cx(["approve", "r1"]).out, /To approve exactly this/);
 
-  // Adding the disclosure changes the item, so every earlier gate must be passed again.
+  // The receipt begun under the earlier rules is still refused without it.
+  const old = "pennycook-2021-receipt";
+  cx(["new", old, "review"]);
+  writeFileSync(join(dir, `outbox/${old}/draft.json`), readFileSync(draft, "utf8"));
+  cx(["rehearse", old]); cx(["review", old]); cx(["summary", old]);
+  const fo = join(dir, `outbox/${old}/SIGNOFF.md`); writeFileSync(fo, readFileSync(fo, "utf8").replace(/<!-- WRITE[^>]*-->/g, "Written."));
+  assert.match(readFileSync(fo, "utf8"), /listed in records\/relationships.csv/);
+  assert.match(cx(["approve", old]).out, /must disclose the operator's relationship with Dr Hulme/);
+
+  // Adding the one-line disclosure changes the item, so every earlier gate must be passed again.
   edit((d) => { d.rationale += " Calopteryx's operator works with Dr Daniel Hulme, whose agent registered this claim."; });
   assert.match(cx(["approve", "r1"]).out, /changed since its rehearsal/);
   cx(["rehearse", "r1"]);
@@ -218,20 +236,20 @@ test("end to end: every gate refuses in turn, then the approval is signed and re
   assert.match(cx(["approve", "c1"]).out, /receipt work, done on the runner machine/);
 });
 
-test("filed items touching Dr Hulme's agents' work are listed for audit; others are not", async () => {
+test("only the receipt begun under the earlier rules is listed for audit, and only if it touches Dr Hulme's agents' work", async () => {
   const dir = mkdtempSync(join(tmpdir(), "audit-")), here = process.cwd();
   const { auditRelationship } = await import("../src/calopteryx/cli.js");
   process.chdir(dir);
   try {
     const rel = { operator: "op", agents: ["Exuvia", "Imago"], touches: ["the claim ext:x is by Exuvia"], changes: ["the claim ext:x would move from unchecked to supported"] };
-    for (const [n, r] of [["a", rel], ["b", { ...rel, touches: [] }]] as const) {
+    for (const [n, r] of [["pennycook-2021-receipt", rel], ["pennycook-2021-receipt-result", { ...rel, touches: [] }], ["a", rel]] as const) {
       const d = join("outbox", n); spawnSync("mkdir", ["-p", d]);
       writeFileSync(join(d, "rehearsal.json"), JSON.stringify({ relationship: r }));
       auditRelationship(n, { type: "review" }, 201);
     }
     const lines = readFileSync("records/relationships.csv", "utf8").trim().split("\n");
     assert.equal(lines.length, 2);
-    assert.match(lines[1]!, /"a","review","201","Exuvia Imago"/);
+    assert.match(lines[1]!, /"pennycook-2021-receipt","review","201","Exuvia Imago"/);
     assert.match(lines[1]!, /would move from unchecked to supported/);
   } finally { process.chdir(here); }
 });
@@ -261,11 +279,16 @@ test("a cross-checked result's unrehearsable comparison passes only with Lucy's 
 
   // The summary says the comparison could not be rehearsed, and where a result's disclosure is carried.
   const rel: Relationship = { operator: "op_x", agents: ["Imago"], touches: ["the receipt cross-checked is by Imago"], changes: [] };
-  const text = skeleton("res", result, "f".repeat(64), [], rel, true);
+  const text = skeleton("pennycook-2021-receipt-result", result, "f".repeat(64), [], rel, true);
   assert.match(text, /could not make the cross-check comparison/);
   assert.match(text, /Only the live archive can compare the outputs/);
   assert.match(text, /disclosure is carried by the commitment's methods/);
   assert.doesNotMatch(text, /changed nothing of theirs/);
   assert.doesNotMatch(skeleton("res", result, "f".repeat(64), [], rel, false), /could not make the cross-check comparison/);
-  assert.match(skeleton("rv", { ...base, type: "review" }, "f".repeat(64), [], rel), /Its text discloses the relationship/);
+  assert.match(skeleton("pennycook-2021-receipt", { ...base, type: "review" }, "f".repeat(64), [], rel), /Its text discloses the relationship/);
+  // Under the new rules the summary reminds, and no longer mentions the log.
+  const now = skeleton("rv", { ...base, type: "review" }, "f".repeat(64), [], rel);
+  assert.match(now, /Its rationale must state the relationship in one line/);
+  assert.doesNotMatch(now, /relationships\.csv/);
+  assert.match(skeleton("res2", result, "f".repeat(64), [], rel), /carried by the item it follows from/);
 });

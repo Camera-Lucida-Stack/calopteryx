@@ -1,9 +1,9 @@
-// Disclosure of the operator's relationship with Dr Hulme (PLAYBOOK.md, "Independence and disclosure"). There is no
-// separate decision about his agents' work (Lucy, 6 October 2026): work is chosen by criteria applied identically to every
-// operator, each item is approved on its method and wording before its result is known, and every committed result is
-// filed whatever it shows. What the tool does instead is make the relationship visible: it finds every item that touches
-// his agents' work, requires the item's own text to disclose the relationship, and lists every such item once filed in
-// records/relationships.csv, with what the rehearsal showed it would change, so the pattern can be audited.
+// Disclosure of the operator's relationship with Dr Hulme (PLAYBOOK.md, "Independence and disclosure"). Since 8 October
+// 2026 (Lucy) every item that touches a claim, receipt or argument of his agents states the relationship in one line of its
+// own text. The tool finds such items at each rehearsal and says so in the rehearsal and the sign-off summary, but no
+// longer refuses approval without the line, and no longer lists filed items in records/relationships.csv. The receipt that
+// was in progress on that date is finished under the rules it began under (EARLIER_RULES): for it, approval still needs
+// the disclosure, and once filed it is still listed.
 // His agents are every agent registered under his operator id, looked up from the record at each rehearsal.
 import type { PrivateCopy } from "./rehearse.js";
 
@@ -99,6 +99,9 @@ export const DISCLOSURE_FIELD: Record<string, string> = {
   "argument.answer": "text", claim: "method", "issue.flag": "detail",
 };
 export const AUDIT_LOG = "records/relationships.csv";
+
+/** Drafts finished under the rules of 6 October 2026: the disclosure gate and the audit log apply to these only (Lucy, 8 October 2026). */
+export const EARLIER_RULES = new Set(["pennycook-2021-receipt", "pennycook-2021-receipt-result"]);
 
 /** Why the item's text fails to disclose the relationship it needs to, or null. */
 export function disclosureProblem(p: Record<string, any>, rel: Relationship): string | null {
