@@ -13,14 +13,18 @@ cluster2's: V = V(participant) + V(headline) - V(robust), each with Stata's smal
 for a clustered variance and N/(N-K) for the robust one (cluster2 uses the robust variance when every participant-
 headline pair occurs once, as here by construction: the participant is the row number, as in the do-files' gen id=_n).
 
-The run stops with no outputs if an analysed participant lacks a valid start or end date, if the dates fall outside the
-claim's period (2017-10 to 2019-05), or if any output is not a finite number.
+The run stops with no outputs, so that PLAN.md's checks lead to an attempt or a corrected rerun, if a row is shorter or
+longer than the header; if any needed column holds, in any row, a token that Stata's destring without force would reject
+(which would have stopped the authors' do-file); if Study 3 or 4 has a condition other than missing, 1 or 2 (i.condition
+would add a category for it); if an analysed participant lacks a valid start or end date, or does not have
+20171001 <= start <= end <= 20190531; or if any output is not a finite number.
 """
 import csv
 import datetime
 import json
 import math
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lib"))
@@ -38,24 +42,28 @@ TARGETS = {
 }
 B_TOLERANCE = 0.0001   # the estimate may differ from the published value by at most this
 SE_TOLERANCE = 0.05    # the SE may differ from the published value by at most this share of it
-PERIOD = (20171001, 20190531)   # the claim's period; the data's earliest start and latest end must lie within it
+PERIOD = (20171001, 20190531)   # the claim's period; every analysed participant's start and end must lie within it
+MISSING = {"", "."} | {"." + c for c in "abcdefghijklmnopqrstuvwxyz"}   # Stata's system and extended missing values
+NUMERIC = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?")     # what destring converts (no "nan", "inf", "1_0")
+
+
+def unreadable(text):
+    """True for a token that destring without force would reject; blank and Stata's missing values are not."""
+    s = text.strip()
+    return s not in MISSING and not NUMERIC.fullmatch(s)
 
 
 def number(text, exclusions, column):
-    """A blank cell is missing, as with Stata's destring. Any other token that is not a finite number ("n/a", and also
-    "nan" or "inf") is missing here and counted: destring without force would leave such a column unconverted, so a
-    non-zero count marks a point where this script and the authors' Stata run could differ."""
+    """destring: blank, "." and ".a" to ".z" are missing. Any other token destring would reject is missing here and
+    counted; scan() stops the run before any filtering if a needed column holds one, so a completed run counts none."""
     s = text.strip()
-    if s == "":
+    if s in MISSING:
         return None
-    try:
-        x = float(s)
-    except ValueError:
-        x = None
-    if x is None or not math.isfinite(x):
+    if unreadable(s):
         exclusions.add(f"unreadable cell in {column}")
         return None
-    return x
+    x = float(s)
+    return x if math.isfinite(x) else None
 
 
 def us_date(text):
@@ -78,13 +86,27 @@ def us_date(text):
 
 
 def read(name):
-    """Rows as dicts keyed by lower-case column names (Stata's insheet lower-cases them)."""
+    """Rows as dicts keyed by lower-case column names (Stata's insheet lower-cases them). Every column is loaded; only
+    the needed ones are used. A row shorter or longer than the header stops the run."""
     with open(os.path.join(INPUTS, name), encoding="utf-8-sig", newline="") as f:
         rows = list(csv.reader(f))
     header = [h.strip().lower() for h in rows[0]]
     if len(set(header)) != len(header):
         raise SystemExit(f"{name}: repeated column names")
-    return [dict(zip(header, r)) for r in rows[1:] if any(c.strip() for c in r)], header
+    rows = [r for r in rows[1:] if any(c.strip() for c in r)]
+    ragged = sum(len(r) != len(header) for r in rows)
+    if ragged:
+        raise SystemExit(f"{name}: {ragged} row(s) shorter or longer than the header; no outputs")
+    return [dict(zip(header, r)) for r in rows], header
+
+
+def scan(name, rows, numbers, dates):
+    """Before any filtering, every row of every needed column: a number column must hold only tokens destring accepts,
+    and a date column only blanks or real dates. Otherwise the run stops, naming the columns."""
+    bad = sorted({c for c in numbers for r in rows if unreadable(r[c])} |
+                 {c for c in dates for r in rows if r[c].strip() and us_date(r[c]) is None})
+    if bad:
+        raise SystemExit(f"{name}: unreadable values in {', '.join(bad)}; no outputs")
 
 
 def observations(name, items, regressors, exclusions):
@@ -92,10 +114,12 @@ def observations(name, items, regressors, exclusions):
     rows, header = read(name)
     start = "startdate" if "startdate" in header else "v8"     # Study 3 has Qualtrics' older V8/V9 columns
     end = "enddate" if "enddate" in header else "v9"
-    for c in ["condition", "fb", "socialmedia_chk", start, end]:
+    answers = [f"{k}{i}_3" for k in ("fake", "real") for i in range(1, items + 1)]
+    for c in ["condition", "fb", "socialmedia_chk", start, end] + answers:
         if c not in header:
             raise SystemExit(f"{name}: no column {c}")
-    obs, dates, undated = [], [], 0
+    scan(name, rows, ["condition", "fb", "socialmedia_chk"] + answers, [start, end])
+    obs, dates, undated, outside = [], [], 0, 0
     for pid, row in enumerate(rows):
         chk = number(row["socialmedia_chk"], exclusions, "socialmedia_chk")
         if chk is None:
@@ -112,15 +136,13 @@ def observations(name, items, regressors, exclusions):
         for real in (0, 1):
             for i in range(1, items + 1):
                 col = f"{'real' if real else 'fake'}{i}_3"
-                if col not in header:
-                    raise SystemExit(f"{name}: no column {col}")
                 v = number(row[col], exclusions, col)
                 if v is None:
                     exclusions.add(f"{name}: no sharing answer")
                     continue
                 x = regressors(cond, real)
                 if x is None:
-                    exclusions.add(f"{name}: condition missing or unknown")
+                    exclusions.add(f"{name}: condition missing")
                     continue
                 obs.append((x, (v - 1) / 5, pid, (real, i)))
                 kept += 1
@@ -128,20 +150,29 @@ def observations(name, items, regressors, exclusions):
             s, e = us_date(row[start]), us_date(row[end])
             if s is None or e is None:
                 undated += 1
+            elif not PERIOD[0] <= s <= e <= PERIOD[1]:
+                outside += 1
             dates.append((s, e))
             if regressors is s5 and cond not in (1, 2, 3, 4):
-                exclusions.add(f"{name}: condition missing or unknown, kept as a pooled control (not excluded)")
+                exclusions.add(f"{name}: condition missing or other, kept as a pooled control (not excluded)")
     if undated:
         raise SystemExit(f"{name}: {undated} analysed participant(s) lack a valid start or end date; no outputs")
+    if outside:
+        raise SystemExit(f"{name}: {outside} analysed participant(s) do not have {PERIOD[0]} <= start <= end <= "
+                         f"{PERIOD[1]}; no outputs")
     if not obs:
         raise SystemExit(f"{name}: no observations to analyse; no outputs")
     return obs, dates
 
 
 def s34(cond, real):
-    """xi: i.condition*real, condition 1 Control and 2 Treatment: constant, Treatment, veracity, Treatment x veracity."""
-    if cond not in (1, 2):
+    """xi: i.condition*real, condition 1 Control and 2 Treatment: constant, Treatment, veracity, Treatment x veracity.
+    A missing condition drops the observation, as i.condition does; any other value stops the run, since i.condition
+    would add a category for it."""
+    if cond is None:
         return None
+    if cond not in (1, 2):
+        raise SystemExit(f"condition {cond:g} in Study 3 or 4, where only 1 and 2 are expected; no outputs")
     t = cond - 1
     return [1.0, t, real, t * real]
 

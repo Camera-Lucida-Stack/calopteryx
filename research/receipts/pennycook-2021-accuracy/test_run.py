@@ -40,7 +40,8 @@ def write_study(path, items, conditions, n, rng, dates, old_qualtrics=False, bom
         d = rng.choice(dates)
         row = {"V1": f"R{p}", "ResponseID": f"R{p}", "Email": " ", "Zipcode": str(rng.randint(10000, 99999)),
                "V8": f"{d} 10:{p % 60:02d}", "V9": f"{d} 11:00", "StartDate": d, "EndDate": d,
-               "Condition": cond if rng.random() > 0.03 else " ", "FB": fb, "SocialMedia_Chk": chk}
+               "Condition": cond if rng.random() > 0.03 else rng.choice([" ", "5"] if pool_unknown else [" ", "."]),
+               "FB": fb, "SocialMedia_Chk": chk}
         effect = 0.3 if cond in ("2", "3") else 0.0
         for kind in ("Fake", "Real"):
             real = int(kind == "Real")
@@ -52,11 +53,11 @@ def write_study(path, items, conditions, n, rng, dates, old_qualtrics=False, bom
                 if r < 0.04:
                     cell = rng.choice([" ", ""])
                 elif r < 0.045:
-                    cell = "n/a"                       # text in a number column: missing, and counted
+                    cell = rng.choice([".", ".a"])     # Stata's missing values: missing, not unreadable
                 row[f"{kind}{i}_3"] = cell
                 row[f"{kind}{i}_SM"] = str(rng.randint(1, 6))
                 row[f"{kind}{i}_RT_3"] = f"{rng.random() * 9:.3f}"
-                usable = chk.strip() == "1" and fb != "2" and cell.strip() not in ("", "n/a") \
+                usable = chk.strip() == "1" and fb != "2" and cell.strip() not in ("", ".", ".a") \
                     and (pool_unknown or row["Condition"].strip() in conditions)
                 if usable:
                     expected.append((row["Condition"].strip(), real, i, p, (v - 1) / 5))
@@ -102,18 +103,21 @@ class Synthetic(unittest.TestCase):
             self.assertEqual(self.out[f"{s}_n_participants"], len({e[3] for e in exp}))
             self.assertEqual(self.out[f"{s}_n_headlines"], len({(e[1], e[2]) for e in exp}))
 
-    def test_study_5_keeps_a_missing_condition_as_a_control(self):
-        self.assertTrue(any(e[0] == "" for e in self.expected["s5"]))     # the synthetic data contain such participants
+    def test_study_5_keeps_a_missing_or_other_condition_as_a_control(self):
+        # The synthetic data contain such participants, and the counts and the independent fit include them.
+        self.assertTrue(any(e[0] == "" for e in self.expected["s5"]))
+        self.assertTrue(any(e[0] == "5" for e in self.expected["s5"]))
 
-    def test_text_in_number_cells_is_counted(self):
-        self.assertGreater(self.out["n_unreadable_cells"], 0)
+    def test_stata_missing_values_are_missing_not_unreadable(self):
+        self.assertEqual(self.out["n_unreadable_cells"], 0)
 
     def test_period_is_read_from_the_data(self):
         self.assertEqual(self.out["period_from"], 20171004)
         self.assertEqual(self.out["period_to"], 20190502)
 
     def test_at_most_twenty_numeric_outputs_period_included(self):
-        # The reference runner refuses more than 20 keys in outputs.json, counting period_from and period_to.
+        # The plan registers 19 outputs, period_from and period_to among them. Since ecdysis-core ef41ddc the reference
+        # runner counts the two period outputs apart from its limit of 20, as the archive does; 19 is within it either way.
         self.assertLessEqual(len(self.out), 20)
         self.assertEqual(len(self.out), 19)
         self.assertNotIn("s3_b_treatment", self.out)
@@ -157,12 +161,19 @@ class Pieces(unittest.TestCase):
         self.assertIsNone(run.number("nan", ex, "c"))
         self.assertIsNone(run.number("inf", ex, "c"))
         self.assertIsNone(run.number("-Infinity", ex, "c"))
+        self.assertIsNone(run.number("1_0", ex, "c"))                 # Python's float() would read 10
+        for missing in (".", ".a", ".z", " . "):
+            self.assertIsNone(run.number(missing, ex, "c"))
         self.assertEqual(run.number(" 3 ", ex, "c"), 3.0)
-        self.assertEqual(ex.counts["unreadable cell in c"], 4)     # n/a, nan, inf and -Infinity; the blank is not
+        self.assertEqual(run.number("1e1", ex, "c"), 10.0)
+        self.assertEqual(ex.counts["unreadable cell in c"], 5)     # n/a, nan, inf, -Infinity, 1_0; missing values are not
 
     def test_models(self):
         self.assertEqual(run.s34(2, 1), [1.0, 1, 1, 1])
-        self.assertIsNone(run.s34(3, 0))
+        self.assertIsNone(run.s34(None, 0))                           # i.condition drops a missing condition
+        for other in (3, 0, 9):                                       # and would add a category for any other value
+            with self.assertRaises(SystemExit):
+                run.s34(other, 0)
         self.assertEqual(run.s5(4, 1), [1.0, 0.0, 1, 0.0, 1.0, 1.0])
         self.assertEqual(run.s5(2, 1), [1.0, 0.0, 1, 0.0, 0.0, 0.0])
         for other in (None, 5, 0):                                    # Stata: condition==3 and ==4 are both false
@@ -222,16 +233,21 @@ class Scoring(unittest.TestCase):
                 self.assertEqual(run.score(got), met, (study, "se", ratio))
 
 
-def tiny(path, rows, items=1, old_qualtrics=False):
-    """A minimal study file: rows of (condition, start, end); every participant shares politics and uses Facebook."""
-    start, end = ("V8", "V9") if old_qualtrics else ("StartDate", "EndDate")
-    head = [start, end, "Condition", "FB", "SocialMedia_Chk"] + \
+def tiny(path, rows, items=1, cells=None, extra=None):
+    """A minimal study file: rows of (condition, start, end); every participant shares politics and uses Facebook.
+    cells maps (row, column) to a replacement value; extra maps a row to cells appended (+) or removed (-) at its end."""
+    head = ["StartDate", "EndDate", "Condition", "FB", "SocialMedia_Chk"] + \
         [f"{k}{i}_3" for k in ("Fake", "Real") for i in range(1, items + 1)]
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(head)
         for p, (cond, s, e) in enumerate(rows):
-            w.writerow([s, e, cond, "1", "1"] + [str(1 + (p + i) % 6) for i in range(2 * items)])
+            row = [s, e, cond, "1", "1"] + [str(1 + (p * 7 + i * 3 + p * i) % 6) for i in range(2 * items)]
+            for (r, c), v in (cells or {}).items():
+                if r == p:
+                    row[head.index(c)] = v
+            n = (extra or {}).get(p, 0)
+            w.writerow(row + ["x"] * n if n >= 0 else row[:n])
 
 
 class Stops(unittest.TestCase):
@@ -244,24 +260,29 @@ class Stops(unittest.TestCase):
         run.INPUTS = self.saved
         self.tmp.cleanup()
 
-    def obs(self, rows, model):
-        tiny(os.path.join(self.tmp.name, "f.csv"), rows)
+    def obs(self, rows, model, **kw):
+        tiny(os.path.join(self.tmp.name, "f.csv"), rows, **kw)
         ex = run.Exclusions()
-        return run.observations("f.csv", 1, model, ex), ex
+        return run.observations("f.csv", kw.get("items", 1), model, ex), ex
 
     def test_study_5_missing_or_other_condition_is_a_pooled_control_and_counted(self):
-        rows = [("1", "4/30/2019", "4/30/2019"), ("3", "4/30/2019", "4/30/2019"), (" ", "5/1/2019", "5/1/2019"),
-                ("7", "5/1/2019", "5/1/2019")]
-        (obs, _), ex = self.obs(rows, run.s5)
-        self.assertEqual(sorted({o[2] for o in obs}), [0, 1, 2, 3])
-        self.assertEqual([o[0] for o in obs if o[2] in (2, 3)], [[1.0, 0.0, r, 0.0, 0.0, 0.0] for r in (0, 1)] * 2)
-        self.assertEqual(ex.counts["f.csv: condition missing or unknown, kept as a pooled control (not excluded)"], 2)
+        d = "4/30/2019"
+        known = [(c, d, d) for c in "1234" * 3]
+        (obs, _), ex = self.obs(known + [(" ", d, d), ("7", d, d), (".", d, d)], run.s5, items=3)
+        pooled = {len(known), len(known) + 1, len(known) + 2}
+        self.assertEqual({o[2] for o in obs} & pooled, pooled)        # in the fitted sample
+        self.assertTrue(all(o[0][1] == o[0][4] == 0.0 for o in obs if o[2] in pooled))      # as controls
+        self.assertEqual(ex.counts["f.csv: condition missing or other, kept as a pooled control (not excluded)"], 3)
+        with_them = run.cluster2(obs)
+        without = run.cluster2([o for o in obs if o[2] not in pooled])
+        self.assertNotEqual(with_them[0], without[0])                 # and they change the estimates
+        self.assertEqual(with_them[3] - without[3], 3)
 
     def test_studies_3_and_4_drop_a_missing_condition(self):
         rows = [("1", "10/4/2017", "10/4/2017"), ("2", "10/4/2017", "10/4/2017"), (" ", "10/5/2017", "10/5/2017")]
         (obs, _), ex = self.obs(rows, run.s34)
         self.assertEqual(sorted({o[2] for o in obs}), [0, 1])
-        self.assertEqual(ex.counts["f.csv: condition missing or unknown"], 2)      # one per observation
+        self.assertEqual(ex.counts["f.csv: condition missing"], 2)      # one per observation
 
     def test_an_analysed_participant_without_a_start_or_end_date_stops_the_run(self):
         for s, e in (("", "10/4/2017"), ("10/4/2017", ""), ("2/31/2018", "10/4/2017"), ("10/4/2017", "x")):
@@ -274,6 +295,41 @@ class Stops(unittest.TestCase):
         with self.assertRaises(SystemExit) as c:
             self.obs(rows, run.s34)
         self.assertIn("2 analysed participant(s)", str(c.exception))
+
+    def test_studies_3_and_4_stop_on_another_condition(self):
+        with self.assertRaises(SystemExit):
+            self.obs([("1", "10/4/2017", "10/4/2017"), ("2", "10/4/2017", "10/4/2017"), ("3", "10/4/2017", "10/4/2017")],
+                     run.s34)
+
+    def test_each_participants_dates_must_be_ordered_and_within_the_claims_period(self):
+        ok = ("1", "10/4/2017", "10/4/2017")
+        self.obs([ok, ("2", "10/1/2017", "5/31/2019")], run.s34)       # both boundaries are inside
+        for s, e in (("10/5/2017", "10/4/2017"),                       # reversed
+                     ("9/30/2017", "10/4/2017"),                       # start too early, on its own
+                     ("10/4/2017", "6/1/2019"),                        # end too late, on its own
+                     ("6/1/2019", "6/2/2019"),                         # start too late (end too)
+                     ("9/29/2017", "9/30/2017")):                      # end too early (start too)
+            with self.assertRaises(SystemExit, msg=(s, e)):
+                self.obs([ok, ("2", s, e)], run.s34)
+
+    def test_an_unreadable_token_anywhere_in_a_needed_column_stops_the_run_naming_it(self):
+        d = "10/4/2017"
+        rows = [("1", d, d), ("2", d, d), ("1", d, d)]
+        for col, bad in (("Condition", "two"), ("FB", "n/a"), ("SocialMedia_Chk", "nan"), ("Fake1_3", "inf"),
+                         ("Real1_3", "1_0"), ("StartDate", "yesterday"), ("EndDate", "2/31/2018")):
+            # Row 2's participant is excluded (no answers at all), yet the token still stops the run, as in Stata.
+            cells = {(2, "Fake1_3"): "", (2, "Real1_3"): "", (2, col): bad}
+            with self.assertRaises(SystemExit, msg=col) as c:
+                self.obs(rows, run.s34, cells=cells)
+            self.assertIn(col.lower(), str(c.exception))
+        (obs, _), ex = self.obs(rows, run.s34, cells={(1, "FB"): ".", (2, "Fake1_3"): ".b"})
+        self.assertEqual(len({o[2] for o in obs}), 3)                 # Stata's missing values do not stop it
+
+    def test_short_or_long_rows_stop_the_run(self):
+        d = "10/4/2017"
+        for n in (-1, 1):
+            with self.assertRaises(SystemExit, msg=n):
+                self.obs([("1", d, d), ("2", d, d)], run.s34, extra={1: n})
 
     def test_an_undated_participant_who_is_not_analysed_does_not_stop_the_run(self):
         (obs, dates), _ = self.obs([("1", "10/4/2017", "10/4/2017"), ("2", "10/4/2017", "10/4/2017"),
