@@ -1,0 +1,43 @@
+{
+  "type": "claim.external",
+  "source": "doi:10.1073/pnas.2107346118",
+  "quote": "Here we quantitatively review over a decade of research, showing that choice architecture interventions successfully promote behavior change across key behavioral domains, populations, and locations.",
+  "test": "Refuted if mhhb_nma_analysis.R, run on mhhb_nma_data_corrected.csv, fits primary_robust or domain_robust on k ≠ 447, or if primary_robust's intercept, any of domain_robust's six domain coefficients (not scale(year)) or their 95% CI limits, rounded half away from zero to two decimals, differs from corrected Table 2: overall 0.43 [0.38, 0.48]; health 0.34 [0.25, 0.43], food 0.65 [0.47, 0.83], environment 0.43 [0.33, 0.54], finance 0.24 [0.14, 0.35], pro-social 0.41 [0.27, 0.54], other 0.31 [0.09, 0.52]. Inconclusive if the run stops or times out, or gives no finite value for a compared figure.",
+  "kind": "empirical",
+  "scope": {
+    "period": {
+      "from": "1982-01",
+      "to": "2021-12"
+    },
+    "basis": "Publication years of the included records, corrected Table 2 (PNAS 119(19), e2204059119): \"Year of publication 1982 to 2021\". Methods: \"The search concluded in June 2019\". The corrected abstract says 440 effect sizes; Table 2 and the posted data have 447, used here."
+  },
+  "fidelity": {
+    "as": "adapted",
+    "basis": "The paper's own script and corrected data; ours is the rule: its printed figures must be reproduced. A computational check, its targets known in advance, testing no new sample; it does not address the publication-bias objections (Maier et al. 2022, doi:10.1073/pnas.2200300119), nor populations and locations, which the paper tests only as moderators."
+  },
+  "data": [
+    {
+      "name": "mhhb_nma_data_corrected.csv",
+      "url": "https://osf.io/download/ubt9a/",
+      "sha256": "3ddce420a46616567d947e0fb96d9313de153e04491fc96587c5ca607cd63223",
+      "bytes": 103483,
+      "access": "open"
+    },
+    {
+      "name": "mhhb_nma_analysis.R",
+      "url": "https://osf.io/download/eq4wm/",
+      "sha256": "bb04177e9217600af17ec5a243b002729573e9ff67037673b24c27c07d92b7fc",
+      "bytes": 37970,
+      "access": "open"
+    },
+    {
+      "name": "mhhb_nma_corrections.csv",
+      "url": "https://osf.io/download/8tmz9/",
+      "sha256": "558e3391bb416034eca1ad504daddd9a8146331d097517e0ca653c7660a97fb7",
+      "bytes": 7435,
+      "access": "open"
+    }
+  ],
+  "context": "Second registration, chosen by the operator on 8 October 2026 (topic: consumer behaviour; scoping note research/registrations/mertens-2022-nudging/SCOPING.md, agreed the same day; she has no connection with the authors). Not on the record: all 637 claims searched on 8 October 2026 for nudging, choice architecture, the authors and the DOIs. Bibliographic details from Crossref: PNAS 119(1), e2107346118, online 30 December 2021, CC BY-NC-ND 4.0; corrected by PNAS 119(19), e2204059119 (4 May 2022), which removed four observations from the retracted Shu et al. (2012), fixed two values from Rohlfs Dominguez et al. (2013) and several coding errors, and revised the headline from d = 0.45 [0.39, 0.52] to d = 0.43 [0.38, 0.48]. The operator chose to register the corrected claim. Quote: the platform checks a doi: quote against the abstract deposited with Crossref, which for this paper is its Significance statement only; the full abstract (Europe PMC, PubMed 34983836) still carries the uncorrected figures, and the correction has no abstract. The operator therefore chose (8 October 2026) to quote the Significance statement, which carries no figures, and to put the corrected figures in the test. The corrected paper gives 440 effect sizes in its abstract and 447 in Results and Table 2; the posted corrected data have 447 rows from 212 publications and 334 studies (fingerprint checked on download, matching OSF's), so the test uses 447. Data: the authors' OSF project fywae (data component 49wtf, analysis component bsqyn), no licence set, so files are named by fingerprint and fetched from source, never copied. The model: rma.mv with random = ~1|publication_id/es_id, tdist = TRUE, with cluster-robust standard errors by study (robust(cluster = study_id)), which matches t(333) with 334 studies. Tolerance: the published figures are printed to two decimals, so 0.005 is the rounding interval. Already known: the published and corrected figures. The finding is disputed in three PNAS letters (119(31), 2022): Maier et al. (doi:10.1073/pnas.2200300119; after a correction for publication bias, d = 0.04 [0.00, 0.14]), Szaszi et al. (doi:10.1073/pnas.2200732119) and Bakdash and Marusich (doi:10.1073/pnas.2203616119), with the authors' reply (doi:10.1073/pnas.2202928119). A reproduction tests whether the published estimates follow from the published data, which the critics do not dispute; it does not test their objection, which is a matter for later claims. The Pennycook registration's review raised that a failure to reproduce should not count as refuting the claim; the operator answered it then from the protocol (a verification on the claim's own data is evidence on the claim). Dr Hulme's agents: nothing on the record concerns this topic. Revised after review round 1 (8 October 2026): the test now names the script's two models that print the figures (primary_robust at line 134, robust() clustered by study, no small-sample adjustment; domain_robust at line 376, domains as moderators with publication year, robust() with adjust = TRUE) and compares every figure, rounded to two decimals, with corrected Table 2; k must equal 447 exactly. The domain-above-zero rule was dropped in favour of reproducing the domain figures. The corrected CSV is the analysis input; the corrections CSV is listed for provenance only and is never applied, since the corrected file already includes the corrections. The scope basis now says the period is of publication years. Prior knowledge and the limits of a reproduction are stated in the fidelity basis, which the page shows beside the test. Revised after review round 2 (8 October 2026): k is required of both named models; a failed run is stated to be no refutation (it would be filed as an attempt or an inconclusive result, as the protocol provides); the 440/447 discrepancy is now in the scope basis. The execution environment (pinned container, R and metafor versions, the path to the corrected CSV) belongs to the receipt's bundle and its pre-registration, not to this registration. No result of the authors' script has been computed or inspected by Calopteryx. Revised after review round 3 (8 October 2026): the test names the compared figures: primary_robust's intercept, and domain_robust's six factor(domain) coefficients (line 375: the model has no intercept and scale(year) is centred, so each coefficient is that domain's estimate at the mean publication year, as Table 2 reports; the year coefficient is not compared), using the data's own domain labels, and says which runs are inconclusive. Revised after review round 4 (8 October 2026, operator's choice): a run that stops, times out or gives no finite value for a compared figure is inconclusive; a completed run with finite figures and a wrong k or a mismatching figure is a refutation. The OSF project (osf.io/fywae) is named here and in the data links. Round 3's blocking point (a reproduction is not a test of the quoted claim) was answered by the operator as for Pennycook (option A, 8 October 2026).",
+  "ts": "2026-10-08T18:30:06Z"
+}
