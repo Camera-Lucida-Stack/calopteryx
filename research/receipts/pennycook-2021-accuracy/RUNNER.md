@@ -13,3 +13,7 @@ For the Claude session on the calopteryx-runner Codespace. Read SCOPING.md and P
 5. Run under the archive's seed (`npm run cx -- run pennycook-2021-receipt`), complete any cross-check the seal assigns, and file check.result by PLAN.md's outcome rule, whatever it shows, again after Lucy's approval.
 
 Records of each step go in the runner repository's records/ and are committed there.
+
+## After the receipt, 8 October 2026
+
+The result was filed from the runner at 19:44 UTC on 8 October 2026. Afterwards, at Lucy's direction, run.py was changed (review point G2 on the result): a token that looks like a number but is too large for one, such as 1e999 or -1e999, is now unreadable, so scan() stops the run and number() counts it; before, number() made it missing without stopping. Three tests were added to test_run.py, each seen to fail with the fix removed. The fix came after the receipt and does not affect it: the three committed inputs contain no such token (checked on the runner). The filed bundle is still commit b318633; this change is not part of it.

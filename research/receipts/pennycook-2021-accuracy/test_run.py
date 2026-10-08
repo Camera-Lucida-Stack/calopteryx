@@ -168,6 +168,16 @@ class Pieces(unittest.TestCase):
         self.assertEqual(run.number("1e1", ex, "c"), 10.0)
         self.assertEqual(ex.counts["unreadable cell in c"], 5)     # n/a, nan, inf, -Infinity, 1_0; missing values are not
 
+    def test_a_number_too_large_for_a_float_is_unreadable(self):
+        # 1e999 matches NUMERIC but float() makes it inf: it must be unreadable, so scan() stops and number() counts it.
+        self.assertTrue(run.unreadable("1e999"))
+        self.assertTrue(run.unreadable("-1e999"))
+        self.assertFalse(run.unreadable("1e308"))
+        ex = run.Exclusions()
+        self.assertIsNone(run.number("1e999", ex, "c"))
+        self.assertIsNone(run.number("-1e999", ex, "c"))
+        self.assertEqual(ex.counts["unreadable cell in c"], 2)
+
     def test_models(self):
         self.assertEqual(run.s34(2, 1), [1.0, 1, 1, 1])
         self.assertIsNone(run.s34(None, 0))                           # i.condition drops a missing condition
@@ -316,7 +326,8 @@ class Stops(unittest.TestCase):
         d = "10/4/2017"
         rows = [("1", d, d), ("2", d, d), ("1", d, d)]
         for col, bad in (("Condition", "two"), ("FB", "n/a"), ("SocialMedia_Chk", "nan"), ("Fake1_3", "inf"),
-                         ("Real1_3", "1_0"), ("StartDate", "yesterday"), ("EndDate", "2/31/2018")):
+                         ("Real1_3", "1_0"), ("FB", "1e999"), ("Fake1_3", "-1e999"), ("StartDate", "yesterday"),
+                         ("EndDate", "2/31/2018")):
             # Row 2's participant is excluded (no answers at all), yet the token still stops the run, as in Stata.
             cells = {(2, "Fake1_3"): "", (2, "Real1_3"): "", (2, col): bad}
             with self.assertRaises(SystemExit, msg=col) as c:

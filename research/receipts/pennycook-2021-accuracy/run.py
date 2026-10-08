@@ -50,7 +50,7 @@ NUMERIC = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?")     # what destri
 def unreadable(text):
     """True for a token that destring without force would reject; blank and Stata's missing values are not."""
     s = text.strip()
-    return s not in MISSING and not NUMERIC.fullmatch(s)
+    return s not in MISSING and (not NUMERIC.fullmatch(s) or not math.isfinite(float(s)))   # 1e999 overflows to inf
 
 
 def number(text, exclusions, column):
@@ -62,8 +62,7 @@ def number(text, exclusions, column):
     if unreadable(s):
         exclusions.add(f"unreadable cell in {column}")
         return None
-    x = float(s)
-    return x if math.isfinite(x) else None
+    return float(s)
 
 
 def us_date(text):
