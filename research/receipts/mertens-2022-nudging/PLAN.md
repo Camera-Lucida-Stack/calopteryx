@@ -51,7 +51,7 @@ run.R, run from the checkout's root as `Rscript research/receipts/mertens-2022-n
 
 **Outputs** (18, plus period_from and period_to): k_primary and k_domain; for each of the seven figures, est_<figure> and hw_<figure> (the half-width of its 95% interval: robust() gives the estimate plus or minus t times its standard error, so the interval is symmetric and is recovered exactly from the two); mismatches (how many of the 21 compared numbers differ after rounding); and script_completed (1 if the script ran to its last line). The full report of 7 estimates, 14 limits and 2 counts would be 23 numbers, above the platform's limit of 20, which is why half-widths are reported in place of the limits. period_from and period_to are the first and last publication years in the data, as 1 January and 31 December of those years (the claim's period is of publication years). A cross-check compares estimates and half-widths within 1e-9 and counts exactly.
 
-**Run time:** to be fixed from the end-to-end test on synthetic data before this plan is approved.
+**Run time:** declared as 60 minutes (runtimeMinutes 60; the runner stops a run at three times that). The end-to-end test on synthetic data of the real file's size took 35 minutes in the sealed setup, with the runner's limits of 2 CPUs and 4 GB.
 
 ## Tests
 
@@ -59,7 +59,7 @@ test_run.R, run by test.sh in the pinned image sealed as the reference runner se
 
 **What the tests found while the code was written** (8 October 2026, synthetic data only): the wrapper first carried coefficient names into the figures it read, which would have stopped the real run (fixed, and tested); the authors' forest plot (line 259) assumes exactly 447 rows, so the synthetic data have 447; and the script's selmodel() calls need numDeriv, which the image lacked (now vendored). Each would have made the real run stop, and so made the receipt inconclusive.
 
-**Independent re-implementation** (PLAYBOOK.md, statistical practice 7): before approval, a model of another family, working from this plan alone and without sight of run.R or compare.R, writes its own implementation of the two models (three-level random-effects meta-analysis by restricted maximum likelihood, with cluster-robust standard errors by study as metafor 3.0-2's robust() computes them, with and without its small-sample adjustment), and its estimates and limits are compared with run.R's on the synthetic data. The real data are never used for this.
+**Independent re-implementation** (PLAYBOOK.md, statistical practice 7): before approval, a model of another family, working from this plan alone and without sight of run.R or compare.R, writes its own implementation of the two models (three-level random-effects meta-analysis by restricted maximum likelihood, with cluster-robust standard errors by study as metafor 3.0-2's robust() computes them, with and without its small-sample adjustment), and its estimates and limits are compared with run.R's on the synthetic data. The real data are never used for this. Done on 8 October 2026 (independent/comparison.md): OpenAI GPT-6.1 Sol's implementation agreed with run.R on both counts and on every estimate and half-width to within 2e-10.
 
 ## Checks before the outcome is judged
 
