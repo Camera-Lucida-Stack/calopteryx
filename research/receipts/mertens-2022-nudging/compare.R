@@ -13,11 +13,30 @@ TARGETS <- data.frame(
   stringsAsFactors = FALSE)
 K <- 447
 
-# Rounds half away from zero, as the test says (R's round() rounds half to even). The 1e-9 is added after scaling,
-# so a value within about 1e-11 of a tie, where binary storage may have put it a hair below, rounds as the tie.
+# Rounds half away from zero, as the test says (R's round() rounds half to even), applied to the value exactly as
+# computed, with no tolerance (amendment of 9 October 2026). floor(abs(x) * 100 + 0.5) is not exact, because the
+# multiplication itself rounds (0.145 is stored as 0.14499999..., but 0.145 * 100 gives 14.5000...), so the stored value
+# is written out in full instead: glibc's printf gives a double's exact decimal expansion, and 1,100 places hold every
+# double's. The digits up to the second decimal are kept, and one is added in the last place if the next digit is 5 or
+# more; the result is read back from its decimal digits, as R reads the targets.
 round_half_away <- function(x, digits = 2) {
-  m <- 10^digits
-  sign(x) * floor(abs(x) * m + 0.5 + 1e-9) / m
+  up_one <- function(s) {                       # adds one in the last place of a string of digits with a point
+    ch <- strsplit(s, "", fixed = TRUE)[[1]]
+    for (i in rev(seq_along(ch))) {
+      if (ch[i] == ".") next
+      if (ch[i] != "9") { ch[i] <- as.character(as.integer(ch[i]) + 1L); return(paste(ch, collapse = "")) }
+      ch[i] <- "0"
+    }
+    paste0("1", paste(ch, collapse = ""))
+  }
+  vapply(x, function(v) {
+    if (!is.finite(v)) return(v)
+    s <- sprintf("%.1100f", abs(v))
+    point <- regexpr(".", s, fixed = TRUE)
+    kept <- substr(s, 1, point + digits)
+    if (as.integer(substr(s, point + digits + 1, point + digits + 1)) >= 5) kept <- up_one(kept)
+    sign(v) * as.numeric(kept)
+  }, numeric(1), USE.NAMES = FALSE)
 }
 
 # The seven figures: estimate and 95% CI limits, unrounded, from the two named models. Rows are found by name, so a
@@ -28,28 +47,44 @@ extract <- function(primary_robust, domain_robust) {
     names <- rownames(m$beta)
     j <- match(TARGETS$coef[i], names)
     if (is.na(j)) stop(sprintf("coefficient %s not found (have: %s)", TARGETS$coef[i], paste(names, collapse = ", ")))
-    c(est = unname(m$beta[j, 1]), lb = unname(m$ci.lb[j]), ub = unname(m$ci.ub[j]))
+    one <- function(v) if (is.numeric(v) && length(v) == 1) unname(v) else NA_real_   # absent: not a finite figure
+    c(est = one(m$beta[j, 1]), lb = one(m$ci.lb[j]), ub = one(m$ci.ub[j]))
   })
   list(k_primary = primary_robust$k, k_domain = domain_robust$k, figures = do.call(rbind, rows))
 }
 
-# The outcome rule. Inconclusive when a count or a compared figure is not a finite number; otherwise refuted
-# ("failed" on Ecdysis) when either k differs from 447 or any of the 21 compared numbers differs after rounding;
-# otherwise confirmed.
+# The outcome rule. Inconclusive when a count or a compared figure is not a finite number (a count must be present,
+# numeric and a single value); otherwise refuted ("failed" on Ecdysis) when either k differs from 447 or any of the 21
+# compared numbers differs after rounding; otherwise confirmed. mismatched marks which of the 21 differ: the seven
+# estimates, then the seven lower limits, then the seven upper limits, each in Table 2's order.
 judge <- function(x) {
   f <- x$figures
-  finite <- all(is.finite(c(x$k_primary, x$k_domain, f)))
-  mismatches <- if (finite) sum(round_half_away(f[, "est"]) != TARGETS$est) +
-                            sum(round_half_away(f[, "lb"]) != TARGETS$lb) +
-                            sum(round_half_away(f[, "ub"]) != TARGETS$ub) else NA
+  count_ok <- function(k) is.numeric(k) && length(k) == 1 && is.finite(k)
+  finite <- count_ok(x$k_primary) && count_ok(x$k_domain) && all(is.finite(f))
+  mismatched <- if (finite) c(round_half_away(f[, "est"]) != TARGETS$est, round_half_away(f[, "lb"]) != TARGETS$lb,
+                              round_half_away(f[, "ub"]) != TARGETS$ub) else NA
+  mismatches <- if (finite) sum(mismatched) else NA
   outcome <- if (!finite) "inconclusive" else if (x$k_primary != K || x$k_domain != K || mismatches > 0) "failed" else "confirmed"
-  list(outcome = outcome, mismatches = mismatches)
+  list(outcome = outcome, mismatches = mismatches, mismatched = mismatched)
+}
+
+# The publication years, checked before they give the period (amendment of 9 October 2026): every year must be present,
+# finite, a whole number and within 1900 to 2100, a plain sanity range; otherwise the run stops with no outputs. A span
+# other than 1982 to 2021 does not stop the run: the outcome is still judged by the test, and the difference is put to
+# the operator before anything is filed (PLAN.md).
+check_years <- function(years) {
+  if (!is.numeric(years) || length(years) == 0 || any(!is.finite(years)) || any(years != floor(years)) ||
+      any(years < 1900 | years > 2100))
+    stop("a publication year is missing, not a whole number or outside 1900-2100; no outputs")
+  invisible(TRUE)
 }
 
 # At most 20 outputs (period_from and period_to are not counted): the two counts, each figure's estimate and the
-# half-width of its interval (robust() gives b +/- t * se, so the interval is symmetric), the number of mismatches,
-# and whether the authors' script ran to its end.
-outputs <- function(x, verdict, completed, years) {
+# half-width of its interval (robust() gives b +/- t * se, so the interval is symmetric), the number of mismatches, and
+# mismatch_mask, whose bit i (worth 2^(i-1)) is set when the i-th of the 21 compared numbers differs, in the order of
+# judge()'s mismatched.
+outputs <- function(x, verdict, years) {
+  check_years(years)
   f <- x$figures
   out <- list(k_primary = x$k_primary, k_domain = x$k_domain)
   for (i in seq_len(nrow(TARGETS))) {
@@ -57,7 +92,7 @@ outputs <- function(x, verdict, completed, years) {
     out[[paste0("hw_", TARGETS$figure[i])]] <- unname((f[i, "ub"] - f[i, "lb"]) / 2)
   }
   out$mismatches <- verdict$mismatches
-  out$script_completed <- as.integer(completed)
+  out$mismatch_mask <- as.integer(sum(2^(which(verdict$mismatched) - 1)))
   out$period_from <- as.integer(min(years) * 10000 + 101)
   out$period_to <- as.integer(max(years) * 10000 + 1231)
   out

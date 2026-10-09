@@ -16,6 +16,11 @@ script <- if (testing) args[2] else "inputs/mhhb_nma_analysis.R"
 data <- if (testing) args[3] else "inputs/mhhb_nma_data_corrected.csv"
 results <- if (testing) args[4] else "results"
 
+# 0. The seed comes from ECDYSIS_SEED only: the run stops with no outputs if it is missing or not hexadecimal (the
+# archive's seed is 64 hexadecimal characters). Checked first, before anything is installed or run.
+seed <- Sys.getenv("ECDYSIS_SEED")
+if (!grepl("^[0-9a-fA-F]+$", seed)) stop("ECDYSIS_SEED is missing or not hexadecimal; no outputs")
+
 # 1. The inputs are the files the claim names. The runner has already checked their SHA-256 and size; R 4.1 has no
 # SHA-256 of its own, so this repeats the check with MD5 (taken on 8 October 2026 from the verified downloads).
 if (!testing) {
@@ -37,14 +42,17 @@ install.packages(file.path(here, "vendor", c("mathjaxr_1.6-0.tar.gz", "pbapply_1
 if (as.character(packageVersion("metafor", lib.loc = lib)) != "3.0.2") stop("metafor 3.0-2 did not install; no outputs")
 
 # 3. Nothing in the parts of the script the test uses is random; the seed is set anyway, from ECDYSIS_SEED only.
-seed <- Sys.getenv("ECDYSIS_SEED")
-if (nzchar(seed)) set.seed(strtoi(substr(seed, 1, 7), 16L))
+set.seed(strtoi(substr(seed, 1, 7), 16L))
 
 # 4. The script reads its data from its working directory by name, so it runs in a writable copy of that directory.
 # View() opens a spreadsheet window, which a sealed machine has not got: here it does nothing. Plots go nowhere.
+# The folder is emptied first, and must hold the one data file and nothing else once it is copied.
 work <- "/tmp/work"
-dir.create(work, showWarnings = FALSE)
-if (!file.copy(data, file.path(work, "mhhb_nma_data_corrected.csv"), overwrite = TRUE)) stop("could not copy the data")
+unlink(work, recursive = TRUE)
+dir.create(work)
+if (!file.copy(data, file.path(work, "mhhb_nma_data_corrected.csv"))) stop("could not copy the data; no outputs")
+if (!identical(list.files(work, all.files = TRUE, no.. = TRUE), "mhhb_nma_data_corrected.csv"))
+  stop("the work folder holds something other than the data; no outputs")
 env <- new.env(parent = globalenv())
 env$View <- function(...) invisible(NULL)
 results <- normalizePath(results, mustWork = FALSE)
@@ -52,19 +60,21 @@ script <- normalizePath(script)
 old <- setwd(work)
 grDevices::pdf(NULL)
 
-# 5. The whole script, from its first line to its last. An error after both named models exist is reported in
-# script_completed and does not stop the comparison; an error before then leaves nothing to compare.
-completed <- tryCatch({ source(script, local = env, echo = FALSE); TRUE }, error = function(e) {
-  message("the authors' script stopped: ", conditionMessage(e)); FALSE })
+# 5. The whole script, from its first line to its last. Any error stops the run with no outputs, whether or not the
+# two named models exist by then: the test says "inconclusive if the run stops" (amendment of 9 October 2026).
+tryCatch(source(script, local = env, echo = FALSE), error = function(e)
+  stop("the authors' script stopped: ", conditionMessage(e), "; no outputs", call. = FALSE))
 setwd(old)
 if (!exists("primary_robust", envir = env, inherits = FALSE) || !exists("domain_robust", envir = env, inherits = FALSE))
-  stop("the script stopped before fitting both named models; no outputs")
+  stop("the script ended without fitting both named models; no outputs")
 
-# 6. The comparison, and the outputs. A figure that is not a finite number makes the run inconclusive: no outputs.
+# 6. The publication years are checked, then the comparison, and the outputs. A figure that is not a finite number
+# makes the run inconclusive: no outputs.
+check_years(env$df$year)
 x <- extract(env$primary_robust, env$domain_robust)
 verdict <- judge(x)
 if (verdict$outcome == "inconclusive") stop("a count or compared figure is not a finite number; no outputs")
-out <- outputs(x, verdict, completed, env$df$year)
+out <- outputs(x, verdict, env$df$year)
 dir.create(results, showWarnings = FALSE)
 jsonlite::write_json(out, file.path(results, "outputs.json"), auto_unbox = TRUE, digits = NA)
 message("done: ", length(out) - 2, " outputs, period outputs aside")
