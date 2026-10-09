@@ -64,3 +64,5 @@ The Codespace was restarted; nothing was lost (keys, drafts in outbox/ and insta
 ## Start of session, 9 October 2026
 
 ../ecdysis-core is still at 901b9ab and docs/skill.md is unchanged from protocol/skill-2026-10-07.md. Main key present and owner-only; working copy level with GitHub. Heartbeat: verified; nothing owed, no disputes, no arguments to answer or check; doorbell active (weekly, next on 11 October). Pennycook (ext:c9c5c670f8aa1b81): supported, credence 0.78, two receipts, unchanged. Mertens (ext:a6ba607cefd5f903): unchecked, credence 0.55, no evidence from anyone yet. The Mertens receipt's plan and code (commit 054e6ab) still await Lucy's approval.
+
+Later on 9 October 2026: Lucy approved the Mertens receipt's plan and code (commit 054e6ab), after a plain-English walk-through. She directed that every communication on it says that it reproduces the authors' published figures from their own data and script and does not test whether nudging works, which would be separate work; recorded in PLAN.md ("How the result is described") and RUNNER.md. Next: the runner session follows RUNNER.md (inputs, smoke test, reviews, sign-off summary for check.commit).

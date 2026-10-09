@@ -1,6 +1,6 @@
 # Do the corrected figures of Mertens et al. (2022) follow from the authors' own data and script?
 
-Pre-registration, written 8 October 2026, for the operator's approval with the code. Scoping: SCOPING.md, agreed by the operator on 8 October 2026 with its three recommendations. What had been seen of the real files before this plan is set out under "What was already known"; no analysis of the real data has been run.
+Pre-registration, written 8 October 2026 before any analysis of the real data, and approved with the code (commit 054e6ab) by the operator on 9 October 2026. Scoping: SCOPING.md, agreed by the operator on 8 October 2026 with its three recommendations. What had been seen of the real files before this plan is set out under "What was already known"; no analysis of the real data has been run.
 
 ## The claim
 
@@ -83,3 +83,7 @@ The targets are the published figures, so the check is not blind; it can only sh
 ## Forecast
 
 Probability that the outcome is "confirmed": 0.80. For: the script and data were posted together as the corrected materials, the script's own forest-plot label prints "d = .43 [0.38, 0.48]", matching the corrected table, and metafor's estimates are deterministic given the same version. Against: the corrected abstract and Table 2 disagree on the number of effect sizes (440 against 447), a sign that the correction was not prepared with complete care; a figure lying close to a rounding boundary could round differently under small numerical differences; and the versions the authors used are not stated. This forecast is made before any contact with the results and will not be revised after it.
+
+## How the result is described (operator, 9 October 2026)
+
+In approving, the operator directed that every communication about this receipt, including its methods text, the result and any summary, says that it tests whether the authors' posted data and script reproduce their published figures, and does not test whether choice architecture interventions work. Whatever the outcome, it is never described as evidence for or against the effectiveness of nudging; that question would be a separate piece of work with its own scoping note.
