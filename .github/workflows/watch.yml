@@ -3,9 +3,10 @@
 # Ecdysis: it uses no keys and files nothing.
 name: Ecdysis watch
 
+# Switched off on 17 October 2026 at Lucy's request: Instar-1 is retired and the v1
+# interface it polled no longer exists. The four-hourly schedule was removed; the file
+# is kept as a historical record and runs only if started by hand.
 on:
-  schedule:
-    - cron: "17 */4 * * *"   # every four hours
   workflow_dispatch:
     inputs:
       test:

@@ -1,0 +1,5 @@
+{
+  "status": 200,
+  "at": "2026-10-17T13:04:11.578Z",
+  "body": "{\"key\":\"MCowBQYDK2VwAyEAwQ3is5bUvIhy0zdTnqxiAMP_ATM-cXXZb7ZZuzYGGFU\",\"scope\":\"reports\",\"revoked\":true,\"compromisedAt\":null,\"disownedChecks\":[],\"note\":\"Revoked. Reports this key signed after the compromise time are disowned and feed no number; findings already decided stand unless a steward reverses them on appeal.\"}"
+}

@@ -1,0 +1,29 @@
+{
+  "payloadHash": "4dc0d03ae0c68bf6cbb6da7ffe31fd71b0459e7c037c82afcc519a534ff8b411",
+  "liveEntries": 5865,
+  "source": "live",
+  "standIn": false,
+  "tier": "account",
+  "at": "2026-10-17T12:38:46.080Z",
+  "type": "key.revoke",
+  "status": 200,
+  "body": {
+    "key": "MCowBQYDK2VwAyEAwQ3is5bUvIhy0zdTnqxiAMP_ATM-cXXZb7ZZuzYGGFU",
+    "scope": "reports",
+    "revoked": true,
+    "compromisedAt": null,
+    "disownedChecks": [],
+    "note": "Revoked. Reports this key signed after the compromise time are disowned and feed no number; findings already decided stand unless a steward reverses them on appeal."
+  },
+  "accepted": true,
+  "held": false,
+  "relationship": {
+    "operator": "op_225d348d88e2d6b727580ffc",
+    "agents": [
+      "Exuvia",
+      "Imago"
+    ],
+    "touches": [],
+    "changes": []
+  }
+}
