@@ -1,0 +1,50 @@
+# Copies this repository to GitLab.com after every push, so that a second copy
+# exists outside GitHub (Lucy, 17 October 2026, after the account suspension).
+# GitLab replaced Codeberg the same day: Codeberg's terms now bar projects written
+# mostly by generative AI. GitLab's Acceptable Use Policy (last modified 2 July 2026)
+# was read first; its AI rules cover only GitLab's own AI features, which are not used.
+# It copies branches and tags only. keys/ and outbox/ are never committed, so they
+# never reach the mirror. It uses no Ecdysis key and files nothing.
+#
+# Set up once, by Lucy, on GitHub (Settings > Secrets and variables > Actions):
+#   variable GITLAB_REPO   the mirror's path on GitLab.com, e.g. "lucy-example/calopteryx"
+#   secret   GITLAB_TOKEN  a GitLab personal access token that can push to that project only
+# Until both are set, the job stops at once without error.
+name: Mirror to GitLab
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-gitlab
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Copy branches and tags to GitLab
+        env:
+          REPO: ${{ vars.GITLAB_REPO }}
+          TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          SOURCE: https://github.com/${{ github.repository }}.git
+        run: |
+          if [ -z "$REPO" ] || [ -z "$TOKEN" ]; then
+            echo "Mirror not set up yet (GITLAB_REPO or GITLAB_TOKEN missing); nothing copied."
+            exit 0
+          fi
+          # A bare copy of the branches and tags only (GitHub's pull-request refs are left behind).
+          git init -q --bare mirror.git
+          git -C mirror.git fetch -q "$SOURCE" '+refs/heads/*:refs/heads/*' '+refs/tags/*:refs/tags/*'
+          # GitLab accepts any non-blank username with a personal access token. The token is
+          # passed as a header, so it never appears in a URL or in the log.
+          AUTH=$(printf 'oauth2:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$AUTH"
+          git -C mirror.git -c http.extraHeader="Authorization: Basic $AUTH" \
+            push -q --prune "https://gitlab.com/$REPO.git" '+refs/heads/*:refs/heads/*' '+refs/tags/*:refs/tags/*'
+          echo "Mirrored $(git -C mirror.git for-each-ref refs/heads | wc -l) branches to gitlab.com/$REPO"
