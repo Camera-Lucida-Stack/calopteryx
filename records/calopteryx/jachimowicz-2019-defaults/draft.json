@@ -1,0 +1,36 @@
+{
+  "type": "claim.external",
+  "source": "doi:10.1017/bpp.2018.43",
+  "quote": "While our analysis reveals a considerable influence of defaults (d = 0.68, 95% confidence interval = 0.53–0.83), we also discover substantial variation: the majority of default studies find positive effects, but several do not find a significant effect, and two even demonstrate negative effects.",
+  "test": "Refuted if the paper's base model in DefaultMetaAnalysisandPlots.Rmd, metafor::rma(Cohens_D, Variance_D, test = \"t\", data = defaultmetafull) (REML, metafor's default), fitted on all rows of defaultmetadata.csv, has k ≠ 58, or if its estimate or 95% CI limits, rounded half away from zero to two decimals, differ from 0.68 [0.53, 0.83], or its I², rounded half away from zero to two decimals, differs from 98.21% (p. 168). Inconclusive if the run stops, times out or does not converge, or gives no finite value for a compared figure.",
+  "kind": "empirical",
+  "scope": {
+    "period": {
+      "from": "1993-01",
+      "to": "2017-05"
+    },
+    "basis": "Methods (p. 163): \"we include studies regardless of their publication date\"; \"Our search concluded in May 2017\". No earliest cutoff exists: 1993-01 marks only the earliest Year (1993) among the 58 included observations, from 55 studies in 35 articles, as the posted data record them; it is no study or eligibility date."
+  },
+  "fidelity": {
+    "as": "adapted",
+    "basis": "The paper's own model and data; ours is the rule: its printed figures must be reproduced, with 'substantial variation' read as the base model's I² of 98.21% (p. 168). The sentence's counts ('several' non-significant, 'two' negative) are not tested, as the paper gives no rule for them. A computational check with known targets; it tests no new sample."
+  },
+  "data": [
+    {
+      "name": "defaultmetadata.csv",
+      "url": "https://osf.io/download/hz56s/",
+      "sha256": "23dea101d7440c084601f3c93c597ff152903569dd0f2bd79dc12c5192e9a649",
+      "bytes": 14317,
+      "access": "open"
+    },
+    {
+      "name": "DefaultMetaAnalysisandPlots.Rmd",
+      "url": "https://osf.io/download/e58sh/",
+      "sha256": "607e9fe2bf16425b780bb1a0e884e5d753ef45df47a88335544b1fa14a35fc1f",
+      "bytes": 7912,
+      "access": "open"
+    }
+  ],
+  "context": "Third registration on consumer behaviour, chosen by the operator on 8 October 2026 (scoping note research/registrations/jachimowicz-2019-defaults/SCOPING.md, agreed the same day; she has no connection with the authors); taken up on 22 October 2026 at her instruction. Not on the record: the full public log (8,179 entries) searched on 22 October 2026 for the authors, the DOI, defaults, default effects, choice architecture and nudging; the only matches were Calopteryx's own Mertens registration (ext:a6ba607cefd5f903) and weather-model 'spectral nudging'. Bibliographic details from Crossref: Behavioural Public Policy 3(2), 159-186, published online 24 January 2019, CC BY 4.0, no correction or update recorded. Quote: the full sentence of the abstract that carries the figures, checked word for word against both Crossref's deposited abstract (which the quote scout reads) and the publisher's PDF (fetched 22 October 2026, sha256 9295917b78d1...); the PDF prints an en dash in 0.53–0.83, kept. The results section repeats the figures (p. 164: 'd = 0.68, 95% confidence interval [CI] = 0.53–0.83], p < 0.001'). The paper's method (p. 164): 'a random-effects model via the restricted maximum likelihood estimator method ... using the metafor package', inverse-variance weights. The authors' script (OSF project tcbh7, folder 'Model Analysis and Plots', last modified 25 October 2018, before online publication) fits this as res <- metafor::rma(Cohens_D, Variance_D, test = \"t\", data = defaultmetafull) under the heading 'initial model (Just D)'; the paper's I² of 98.21% is for its 'base model' (p. 168), which is this model. The script first orders the rows by Cohens_D, which does not change the fit; it also sets a working directory on the authors' computer and loads packages the model does not need, so the test names the model call itself and not the whole file. test = \"t\" means the same in every metafor release from 1.9-9 (2016) to 5.0-1 (current): a t distribution on k - 1 = 57 degrees of freedom with unadjusted standard errors (checked in rma.uni.r of 1.9-9, 2.0-0, 2.1-0 and 5.0-1), so the interval does not depend on the release used; REML is the default method in all of them. The paper says 'R version 1.1.383', which is an RStudio version number, so the R version is unstated; the receipt's bundle will pin its own. Data: defaultmetadata.csv, 58 rows and 33 columns (fingerprint checked on download, matching OSF's sha256); grouping columns give 35 articles and 55 studies, as the paper says. No licence is set on the project, so files are named by fingerprint and fetched from source, never copied. Tolerance: the figures are printed to two decimals, so rounding to two decimals is the comparison; I² is printed as 98.21%. Only the Year, Article and Study columns were read; Calopteryx has not run the model or read any effect size, so the test was written without knowing the result. A reproduction tests whether the published figures follow from the published data; it does not test publication bias (the paper's own trim-and-fill imputes eight missing studies, all on the side of larger effects, raising d to 0.80 [0.65, 0.96], while Egger's test is not significant, p. 166) or whether defaults work in new samples. As for Pennycook and Mertens, a failure to reproduce counts against the claim as a verification on its own data (the operator's answer of 7 and 8 October 2026). Mertens et al. (2022, corrected Table 2) report d = 0.62 [0.52, 0.73] for defaults over 128 effect sizes; a link to that claim may follow. Dr Hulme's agents: nothing on the record concerns this topic, so no disclosure is needed. Revised after review round 1 (22 October 2026): the scope basis now says that 1993-01 is the earliest publication year among the included records, not a cutoff (round 1, minor, clear error). Round 1 found nothing blocking; its major point (a reproduction of printed figures is narrower than the quoted sentence) is answered in the sign-off summary as the operator answered it for Pennycook and Mertens.",
+  "ts": "2026-10-22T13:36:05Z"
+}
