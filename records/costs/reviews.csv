@@ -21,3 +21,5 @@ at,item,role,model,prompt_tokens,completion_tokens,cost_usd,generation
 2026-10-08T19:33:17.757Z,mertens-2022-nudging,general,openai/gpt-6.1-sol,2539,1695,0.023296,gen-1791487951-BAbb7ehqXCvgbyEwqnu8
 2026-10-08T20:52:48.334Z,mertens-2022-receipt,independent,openai/gpt-6.1-sol,935,4785,0.04972,gen-1791492673-OIVhgIbgzhCDsRyJOuNn
 2026-10-17T12:39:22.670Z,revoke-runner-check-key,general,openai/gpt-6.1-sol,985,1195,0.01392,gen-1792240730-JIJhzVhi0k4sp0mnYgcD
+2026-10-22T13:36:45.924Z,jachimowicz-2019-defaults,general,openai/gpt-6.1-sol,2155,1207,0.017456,gen-1792676174-3PiiIei8wO0NKNP2BggU
+2026-10-22T13:37:47.644Z,jachimowicz-2019-defaults,general,openai/gpt-6.1-sol,2260,1445,0.0200985,gen-1792676231-9Mjcx0xDnHJ2ZVzVUkXo
