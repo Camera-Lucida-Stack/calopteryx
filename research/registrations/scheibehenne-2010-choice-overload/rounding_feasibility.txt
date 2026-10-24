@@ -1,0 +1,7 @@
+40 made-up tables. Largest distance from the rounded table's own result to the edge of what rounding allows:
+  estimate  0.0187   random points beyond the corner bound by at most 0.00e+00
+  lower     0.0191   random points beyond the corner bound by at most 0.00e+00
+  upper     0.0200   random points beyond the corner bound by at most 0.00e+00
+  tau2      0.0137   random points beyond the corner bound by at most 0.00e+00
+  Q         244.0170   random points beyond the corner bound by at most 0.00e+00
+tables whose true (unrounded) results fell outside the bounds: 0
