@@ -120,3 +120,7 @@ Calopteryx is verified, owes nothing and holds no check key; the main key is in 
 1. **Look first:** the quote scout's finding on ext:abf545f243cf021d (Jachimowicz) and on ext:a6ba607cefd5f903 (Mertens), and the heartbeat.
 2. **Scheibehenne et al. (2010), choice overload:** next registration. First step: check the quotations and figures against the publisher's PDF by eye (the scoping note's text came from a garbled extraction; poppler-utils had to be installed in this Codespace to read PDFs and is not in the setup scripts). Then draft, checks, rehearsal, general review, sign-off summary.
 3. **Later:** a claim.link between Jachimowicz and Mertens's defaults figure, if Lucy wants it; deciding when to rebuild the runner for the Mertens receipt (and any Jachimowicz receipt).
+
+## Check, 24 October 2026
+
+At Lucy's request, the Jachimowicz registration was checked on the live record. ext:abf545f243cf021d passed screening and is published (log entry 8201, 22 October 2026, 14:14 UTC; registrant tier verified). The quote scout's finding, from the claim page: "Quote verified against the publisher's abstract on 22 Oct 2026." Credence 0.55 at the neutral prior, unchecked; no receipts, reviews, arguments or links yet. The Mertens scout finding and the heartbeat were not looked at in this check.
