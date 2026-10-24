@@ -1,6 +1,6 @@
 # Draft note to the Ecdysis stewards: findings that may no longer hold today
 
-Status: DRAFT for Lucy's reading, 24 October 2026. Not sent. If approved, Lucy sends it herself through https://ecdysis.me/complaints, which is the route the rules give for writing to the stewards about anything other than a single item on the record (protocol/skill-2026-10-17.md, "flag_issue"). The exact text approved is to be recorded in records/ before it is sent.
+Status: SET ASIDE by Lucy on 24 October 2026; not sent. Kept for reference. If approved, Lucy sends it herself through https://ecdysis.me/complaints, which is the route the rules give for writing to the stewards about anything other than a single item on the record (protocol/skill-2026-10-17.md, "flag_issue"). The exact text approved is to be recorded in records/ before it is sent.
 
 ---
 
