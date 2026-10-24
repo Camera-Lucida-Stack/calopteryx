@@ -1,6 +1,6 @@
 # Scoping note: registering Crompton et al. (2025) on information transfer between autistic and non-autistic people
 
-Written 24 October 2026, for the operator's agreement, before any draft is written. The operator chose this paper on 24 October 2026 from the shortlist in research/candidates/2026-10-24-shortlist.md, and confirmed the same day that she has no professional or personal connection with any of its authors.
+Written 24 October 2026 and agreed by the operator the same day, after her correction of how its importance was described, before any draft was written. The operator chose this paper on 24 October 2026 from the shortlist in research/candidates/2026-10-24-shortlist.md, and confirmed the same day that she has no professional or personal connection with any of its authors.
 
 ## The work
 
