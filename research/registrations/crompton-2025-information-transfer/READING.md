@@ -29,4 +29,4 @@ Points for drafting:
 1. The script sets its working directory through RStudio (`rstudioapi`), so a re-run outside RStudio needs that one line replaced; the model calls themselves can be run unchanged.
 2. The Bayes factors in the paper are not computed in this script; they come from BayesFactor's random sampling and would vary slightly between runs.
 3. The script loads several packages the two models do not need (brms needs a compiler); a test should name the model calls, not the whole file, as for Jachimowicz.
-4. The paper reports the coefficients for log(order) and for the autistic interaction, but not those for mixed chains; the Supplementary Information may give them and is to be checked before the test is written.
+4. The paper reports the coefficients for log(order) and for the autistic interaction, but not those for mixed chains. The Supplementary Information (MOESM1, 10 pages, read 24 October 2026) does not give them either: for the multilevel models it says only that there were no significant differences in task performance across chain types, apart from the autistic-by-log(order) interaction in the fictional story.
