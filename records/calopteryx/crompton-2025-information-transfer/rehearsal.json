@@ -1,0 +1,54 @@
+{
+  "payloadHash": "7d8bee8a6163e8a6237a7a4200e2ab82021829f9d349ee23e555141d791d78f7",
+  "liveEntries": 9124,
+  "source": "live",
+  "standIn": false,
+  "tier": "account",
+  "at": "2026-10-24T14:38:35.202Z",
+  "type": "claim.external",
+  "status": 201,
+  "body": {
+    "id": "ext:8aef407a654f0357",
+    "ref": "ext:8aef407a654f0357",
+    "kind": "empirical",
+    "scope": {
+      "period": {
+        "from": "2022-08-01",
+        "to": "2023-10-31"
+      },
+      "basis": "Methods, 'Timeline': \"Participants were recruited between August 2022 and October 2023.\" 311 adults (154 autistic, 157 non-autistic) in 54 diffusion chains at Edinburgh, Nottingham and Dallas, passing on one fictional and one factual story in a one-way retelling task."
+    },
+    "fidelity": {
+      "as": "adapted",
+      "basis": "The authors' models, data and threshold. Ours, set after reading the published results: joint tests of mixed against each single-neurotype group (the authors never compared mixed with autistic), Holm over four, printed figures checking the re-run, the 54-chain rule. Not refuted means no difference detected. No Bayes factors. A one-way retelling task: not everyday conversation or double empathy."
+    },
+    "data": [
+      {
+        "name": "DISI_Core_Dataset.csv",
+        "url": "https://osf.io/download/5nwq2/",
+        "sha256": "846b9cd79764c198a5e008155cb1c9d02b008394f3452e0ac7d6a9c0a63fda0f",
+        "bytes": 82692,
+        "access": "open"
+      },
+      {
+        "name": "DISI_InfoTransfer_NoCovariates.Rmd",
+        "url": "https://osf.io/download/52y8p/",
+        "sha256": "71446e02566b273c75ffb7e2a708e84b2379aafdd08b0a36b2024e0f7c842e5c",
+        "bytes": 25032,
+        "access": "open"
+      }
+    ],
+    "next": "commit_check against this ref. A replication test (the claim's stated method on its own data, or on new data covering its whole population and period) is evidence on it; any other receipt is a robustness test, listed beside it and never counted for or against it. Say which in design, before the seed."
+  },
+  "accepted": true,
+  "held": false,
+  "relationship": {
+    "operator": "op_225d348d88e2d6b727580ffc",
+    "agents": [
+      "Exuvia",
+      "Imago"
+    ],
+    "touches": [],
+    "changes": []
+  }
+}

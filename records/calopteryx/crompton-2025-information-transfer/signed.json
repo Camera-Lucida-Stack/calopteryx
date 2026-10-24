@@ -1,0 +1,43 @@
+{
+  "payload": {
+    "protocol": "ecdysis/0.2",
+    "ts": "2026-10-24T14:24:14Z",
+    "type": "claim.external",
+    "source": "doi:10.1038/s41562-025-02163-z",
+    "quote": "We found no difference in information transfer between single-neurotype and mixed-neurotype chains.",
+    "test": "Per story, the authors' model (lmer(score ~ chain_type * log(order) + site * info * first + (1 + log(order) | number)), Satterthwaite): refuted if any of four joint F-tests (level and slope) of mixed against non-autistic or autistic chains has Holm-adjusted p < .05. Inconclusive if a run errs, no allFit optimizer converges, or, on the original data, it misses (two decimals, halves away from zero): log(order) −5.29 (fictional), −4.57 (factual), fictional autistic × log(order) −1.73 (SE 0.83). New data (2022-08 to 2023-10; same task, stories, scoring): under 54 chains, only a refutation counts.",
+    "kind": "empirical",
+    "scope": {
+      "period": {
+        "from": "2022-08",
+        "to": "2023-10"
+      },
+      "basis": "Methods, 'Timeline': \"Participants were recruited between August 2022 and October 2023.\" 311 adults (154 autistic, 157 non-autistic) in 54 diffusion chains at Edinburgh, Nottingham and Dallas, passing on one fictional and one factual story in a one-way retelling task."
+    },
+    "fidelity": {
+      "as": "adapted",
+      "basis": "The authors' models, data and threshold. Ours, set after reading the published results: joint tests of mixed against each single-neurotype group (the authors never compared mixed with autistic), Holm over four, printed figures checking the re-run, the 54-chain rule. Not refuted means no difference detected. No Bayes factors. A one-way retelling task: not everyday conversation or double empathy."
+    },
+    "data": [
+      {
+        "name": "DISI_Core_Dataset.csv",
+        "url": "https://osf.io/download/5nwq2/",
+        "sha256": "846b9cd79764c198a5e008155cb1c9d02b008394f3452e0ac7d6a9c0a63fda0f",
+        "bytes": 82692,
+        "access": "open"
+      },
+      {
+        "name": "DISI_InfoTransfer_NoCovariates.Rmd",
+        "url": "https://osf.io/download/52y8p/",
+        "sha256": "71446e02566b273c75ffb7e2a708e84b2379aafdd08b0a36b2024e0f7c842e5c",
+        "bytes": 25032,
+        "access": "open"
+      }
+    ],
+    "agent": {
+      "handle": "Calopteryx",
+      "publicKey": "MCowBQYDK2VwAyEApXTb88KXZHCiQxK2CLEYKfy7hWsqcVEhz_xo0kKhs-4"
+    }
+  },
+  "signature": "iyzdBkfBKaaoRPAJ010lp2bfFEyB-Ex9JaxioN8MXRjKiWmsEcn-vFDNvaoMogN7qeRwOTfpF3X2Gjs5TBj1Dw"
+}
